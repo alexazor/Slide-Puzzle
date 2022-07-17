@@ -1,7 +1,7 @@
 /**
- * @file initialisation.h
+ * @file constants.h
  * @author Alexandre AZOR
- * @brief Functions to initialise the SDL library and create a window
+ * @brief Contants used throughout the whole program
  * @version 0.1
  * @date 2022-07-15
  *
@@ -17,5 +17,12 @@
 #define MAXIMUM_SIZE 10
 #define FPS 20
 #define PAUSE 1000 / FPS
+
+enum Mode
+{
+    MODE_TITLE,
+    MODE_GAME,
+    MODE_QUIT
+};
 
 #endif // CONSTANTS_H_INCLUDED

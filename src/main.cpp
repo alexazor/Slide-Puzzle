@@ -1,25 +1,41 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
+#include "constants.h"
+#include "initialisation-closure.h"
 #include <cstdlib>
 #include <iostream>
-#include "initialisation.h"
-
-void bidon(int *&pA)
-{
-    *pA = 7;
-}
 
 int main(int argc, char *argv[])
 {
-    std::cout << "Hello world !" << std::endl;
+    SDL_Window *pWindow = nullptr;
+    SDL_Renderer *pRenderer = nullptr;
+    Mode mode = MODE_TITLE;
 
-    int a = 1;
-    int *pA = &a;
+    if (init_program(pWindow, pRenderer) < 0)
+        return EXIT_FAILURE;
 
-    bidon(pA);
+    switch (mode)
+    {
+    case MODE_TITLE:
+        close_program(pWindow, pRenderer);
+        return EXIT_SUCCESS;
+        break;
 
-    std::cout << a << std::endl;
+    case MODE_GAME:
+        close_program(pWindow, pRenderer);
+        return EXIT_SUCCESS;
+        break;
 
-    return EXIT_SUCCESS;
+    case MODE_QUIT:
+        close_program(pWindow, pRenderer);
+        return EXIT_SUCCESS;
+        break;
+
+    default:
+        SDL_Log("Unknown mode!");
+        close_program(pWindow, pRenderer);
+        return EXIT_FAILURE;
+        break;
+    }
 }
