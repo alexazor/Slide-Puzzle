@@ -32,6 +32,11 @@ int main(int argc, char *argv[])
         return EXIT_SUCCESS;
         break;
 
+    case MODE_ERROR:
+        close_program(pWindow, pRenderer);
+        return EXIT_FAILURE;
+        break;
+
     default:
         SDL_Log("Unknown mode!");
         close_program(pWindow, pRenderer);
