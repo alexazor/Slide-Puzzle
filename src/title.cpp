@@ -22,6 +22,7 @@ Mode title(SDL_Window *pWindow, SDL_Renderer *pRenderer, TTF_Font *pFont)
 
         SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
         SDL_RenderClear(pRenderer);
+        SDL_SetRenderDrawColor(pRenderer, 31, 141, 59, 255);
         SDL_RenderDrawLine(pRenderer, 17, 22, 504, 478);
         SDL_RenderPresent(pRenderer);
     }

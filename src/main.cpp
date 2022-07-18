@@ -1,6 +1,6 @@
 #include <cstdlib>
-#include "constants.h"
-#include "initialisation-closure.h"
+#include "main.h"
+#include "check.h"
 #include "title.h"
 
 int main(int argc, char *argv[])

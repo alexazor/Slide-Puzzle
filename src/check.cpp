@@ -1,4 +1,4 @@
-#include "initialisation-closure.h"
+#include "check.h"
 
 void error_message()
 {

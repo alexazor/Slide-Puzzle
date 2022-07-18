@@ -11,7 +11,7 @@
 #ifndef TITLE_H_INCLUDED
 #define TITLE_H_INCLUDED
 
-#include "initialisation-closure.h"
+#include "check.h"
 
 Mode title(SDL_Window *pWindow, SDL_Renderer *pRenderer, TTF_Font *pFont);
 #endif // TITLE_H_INCLUDED
