@@ -3,6 +3,10 @@
 void error_message()
 {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "[DEBUG] > %s", SDL_GetError());
+
+    std::ofstream errorFile("Error.txt");
+    errorFile << "[DEBUG] > " << SDL_GetError();
+    errorFile.close();
 }
 
 int init_SDL()
@@ -43,59 +47,38 @@ int create_window(SDL_Window *&pWindow, SDL_Renderer *&pRenderer)
     }
 }
 
-int init_program(SDL_Window *&pWindow, SDL_Renderer *&pRenderer)
+int init_program(SDL_Window *&pWindow, SDL_Renderer *&pRenderer, TTF_Font *&pFont)
 {
     if (init_SDL() < 0 || init_TTF() < 0 || create_window(pWindow, pRenderer) < 0)
         return -1;
     else
-        return 0;
+    {
+        pFont = TTF_OpenFont(FONT_PATH, FONT_SIZE);
+        if (pFont == nullptr)
+        {
+            error_message();
+            close_program(pWindow, pRenderer, nullptr);
+            return -1;
+        }
+        else
+            return 0;
+    }
 }
 
-void close_program(SDL_Window *&pWindow, SDL_Renderer *&pRenderer)
+void close_program(SDL_Window *pWindow, SDL_Renderer *pRenderer, TTF_Font *pFont)
 {
+    if (pFont != nullptr)
+        TTF_CloseFont(pFont);
+
     SDL_DestroyWindow(pWindow);
     SDL_DestroyRenderer(pRenderer);
     TTF_Quit();
     SDL_Quit();
 }
 
-int open_font(TTF_Font *&pFont, char *filePath, int ptSize)
+int create_text_surface(SDL_Surface *&textSurface, TTF_Font *font, char *text, SDL_Colour fgColour, SDL_Colour bgColour)
 {
-    pFont = TTF_OpenFont(filePath, ptSize);
-
-    if (pFont == nullptr)
-    {
-        error_message();
-        return -1;
-    }
-    else
-        return 0;
-}
-
-int create_text_surface(SDL_Surface *&textSurface, TTF_Font *font, char *text, SDL_Colour fgColour, TTF_Text_Type textType)
-{
-    return create_text_surface(textSurface, font, text, fgColour, SDL_Colour{0, 0, 0, 255}, textType);
-}
-
-int create_text_surface(SDL_Surface *&textSurface, TTF_Font *font, char *text, SDL_Colour fgColour, SDL_Colour bgColour, TTF_Text_Type textType)
-{
-    switch (textType)
-    {
-    case TTF_SOLID:
-        textSurface = TTF_RenderText_Solid(font, text, fgColour);
-        break;
-    case TTF_SHADED:
-        textSurface = TTF_RenderText_Shaded(font, text, fgColour, bgColour);
-        break;
-    case TTF_BLENDED:
-        textSurface = TTF_RenderText_Blended(font, text, fgColour);
-        break;
-
-    default:
-        textSurface = nullptr;
-        SDL_Log("Unknown value for textType!");
-        break;
-    }
+    textSurface = TTF_RenderText_Shaded(font, text, fgColour, bgColour);
 
     if (textSurface == nullptr)
     {

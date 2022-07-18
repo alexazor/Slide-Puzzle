@@ -1,8 +1,9 @@
 #include "title.h"
 
-Mode chose_mode(SDL_Window *&pWindow, SDL_Renderer *&pRenderer, Mode mode)
+Mode title(SDL_Window *pWindow, SDL_Renderer *pRenderer, TTF_Font *pFont)
 {
     SDL_Event events;
+    Mode mode = MODE_TITLE;
 
     while (mode == MODE_TITLE)
     {
@@ -18,16 +19,12 @@ Mode chose_mode(SDL_Window *&pWindow, SDL_Renderer *&pRenderer, Mode mode)
                 break;
             }
         }
+
+        SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
+        SDL_RenderClear(pRenderer);
+        SDL_RenderDrawLine(pRenderer, 17, 22, 504, 478);
+        SDL_RenderPresent(pRenderer);
     }
 
     return mode;
-}
-// 10 11 18 19 20 13
-void update_title_window(SDL_Window *&pWindow, SDL_Renderer *&pRenderer, TTF_Font *titleFont, TTF_Font *textFont)
-{
-    // SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
-    // SDL_RenderClear(pRenderer);
-    // SDL_SetRenderDrawColor(pRenderer, 124, 75, 97, 255);
-    // SDL_RenderDrawLine(pRenderer, 17, 22, 504, 478);
-    // SDL_RenderPresent(pRenderer);
 }

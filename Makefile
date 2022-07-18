@@ -29,7 +29,7 @@ OBJ_FILES = $(SRC_FILES:$(SRC_PATH)%.cpp=$(OBJ_PATH)%.o)
 # and the extension
 
 ## Linker flags
-LINKER_FLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf
+LINKER_FLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf -lSDL2_image
 
 
 ### Rules

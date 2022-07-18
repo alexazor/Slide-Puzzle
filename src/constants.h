@@ -11,6 +11,9 @@
 #ifndef CONSTANTS_H_INCLUDED
 #define CONSTANTS_H_INCLUDED
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+
 #define WINDOW_WIDTH 629
 #define WINDOW_HEIGHT 629
 
@@ -20,22 +23,11 @@
 #define FPS 20
 #define PAUSE 1000 / FPS
 
-#define FONT_PATH res/font/times.ttf
-
-
 enum Mode
 {
     MODE_TITLE,
     MODE_GAME,
     MODE_QUIT,
     MODE_ERROR
-};
-
-
-enum TTF_Text_Type
-{
-    TTF_SOLID,
-    TTF_SHADED, 
-    TTF_BLENDED
 };
 #endif // CONSTANTS_H_INCLUDED
