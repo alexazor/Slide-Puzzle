@@ -9,7 +9,6 @@ State title(SDL_Renderer *pRenderer, TTF_Font *pFont)
     SDL_Rect textRects[TITLE_TEXT_NBR_OF_ELEMENTS];
     SDL_Rect puzzleSizesRects[PUZZLE_SIZES];
     SDL_Rect imgSDLRect;
-    SDL_Rect selectionRect = SDL_Rect{0, 0, 0, 0};
 
     if (create_textures_title(pRenderer, pFont, pTextTextures, pPuzzleSizesTextures, pImgSDLTexture) < 0)
         return STATE_ERROR;
@@ -39,11 +38,15 @@ int create_textures_title(SDL_Renderer *&pRenderer,
 
     char textTitle[] = {"======Slide Puzzle======"};
     char textInstruction[] = {"Select the mode and choose the size"};
-    char textMode[] = {"Current mode: Game    Demo"};
+    char textMode[] = {"Click to change:"};
+    char textGame[] = {"Game"};
+    char textDemo[] = {"Demo"};
     char textPressP[] = {"P: Highlight the first misplaced bloc"};
     char *textsArray[] = {textTitle,
                           textInstruction,
                           textMode,
+                          textGame,
+                          textDemo,
                           textPressP};
 
     char imgPath[] = {IMG_PATH};
@@ -102,39 +105,59 @@ int create_rectangles_title(SDL_Texture *pTextTextures[],
                             SDL_Rect puzzleSizesRects[],
                             SDL_Rect &imgSDLRect)
 {
-    int i;
+    int i, space_width_puzzle_sizes, space_width_modes, textHeight;
 
+    // Creation of the SDL_Rects
+    //---Creation of the SDL_Rects for the text textures
     for (i = 0; i < TITLE_TEXT_NBR_OF_ELEMENTS; i++)
         if (SDL_QueryTexture(pTextTextures[i], nullptr, nullptr, &textRects[i].w, &textRects[i].h) < 0)
             RETURN_ERR
 
+    //---Creation of the SDL_Rects for the puzzle size textures
     for (i = 0; i <= PUZZLE_SIZE_MAX - PUZZLE_SIZE_MIN; i++)
         if (SDL_QueryTexture(pPuzzleSizesTextures[i], nullptr, nullptr, &puzzleSizesRects[i].w, &puzzleSizesRects[i].h) < 0)
             RETURN_ERR
 
+    //---Creation of the SDL_Rects for the SDL image textures
     if (SDL_QueryTexture(pImgSDLTexture, nullptr, nullptr, &imgSDLRect.w, &imgSDLRect.h) < 0)
         RETURN_ERR
 
+    // Resize image
     imgSDLRect.w = (3 * imgSDLRect.w) / 4;
     imgSDLRect.h = (3 * imgSDLRect.h) / 4;
 
-    for (i = 0; i < TITLE_TEXT_NBR_OF_ELEMENTS; i++)
-    {
-        textRects[i].x = WINDOW_WIDTH / 2 - textRects[i].w / 2;
+    // Positions of the SDL_Rect
+    //---Positions for the text textures
+    space_width_modes = textRects[TITLE_GAME].w / 2;
+    textHeight = textRects[TITLE_TITLE].h;
 
-        if (i != TITLE_PRESS_P)
-            textRects[i].y = 1.5 * i * textRects[i].h;
-        else
-            textRects[i].y = WINDOW_HEIGHT - 2 * textRects[i].h;
-    }
+    textRects[TITLE_TITLE].x = (WINDOW_WIDTH - textRects[TITLE_TITLE].w) / 2;
+    textRects[TITLE_TITLE].y = 0;
 
-    int space_width = WINDOW_WIDTH / (1 + PUZZLE_SIZES) - puzzleSizesRects[0].w;
+    textRects[TITLE_INSTRUCTION].x = (WINDOW_WIDTH - textRects[TITLE_INSTRUCTION].w) / 2;
+    textRects[TITLE_INSTRUCTION].y = 1.5 * textHeight;
+
+    textRects[TITLE_MODE].x = (WINDOW_WIDTH - textRects[TITLE_MODE].w - textRects[TITLE_GAME].w - textRects[TITLE_DEMO].w) / 2 - space_width_modes;
+    textRects[TITLE_MODE].y = 3 * textHeight;
+
+    textRects[TITLE_GAME].x = (WINDOW_WIDTH + textRects[TITLE_MODE].w - textRects[TITLE_GAME].w - textRects[TITLE_DEMO].w) / 2;
+    textRects[TITLE_GAME].y = 3 * textHeight;
+
+    textRects[TITLE_DEMO].x = (WINDOW_WIDTH + textRects[TITLE_MODE].w + textRects[TITLE_GAME].w - textRects[TITLE_DEMO].w) / 2 + space_width_modes;
+    textRects[TITLE_DEMO].y = 3 * textHeight;
+
+    textRects[TITLE_PRESS_P].x = (WINDOW_WIDTH - textRects[TITLE_PRESS_P].w) / 2;
+    textRects[TITLE_PRESS_P].y = WINDOW_HEIGHT - 2 * textHeight;
+
+    //---Position for the puzzle size textures
+    space_width_puzzle_sizes = WINDOW_WIDTH / (1 + PUZZLE_SIZES) - puzzleSizesRects[0].w;
     for (i = 0; i < PUZZLE_SIZES; i++)
     {
-        puzzleSizesRects[i].x = space_width + i * (puzzleSizesRects[0].w + space_width);
+        puzzleSizesRects[i].x = space_width_puzzle_sizes + i * (puzzleSizesRects[0].w + space_width_puzzle_sizes);
         puzzleSizesRects[i].y = (WINDOW_HEIGHT + imgSDLRect.h) / 2 + 0.5 * puzzleSizesRects[i].h;
     }
 
+    //---Position of the image
     imgSDLRect.x = (WINDOW_WIDTH - imgSDLRect.w) / 2;
     imgSDLRect.y = (WINDOW_HEIGHT - imgSDLRect.h) / 2;
 
@@ -149,11 +172,13 @@ State event_loop_title(SDL_Renderer *pRenderer,
                        SDL_Rect puzzleSizesRects[],
                        SDL_Rect &imgSDLRect)
 {
+    const int X_GAME = textRects[TITLE_MODE].x + (50 * textRects[TITLE_MODE].w) / 100;
+    const int X_DEMO = X_GAME + (30 * textRects[TITLE_MODE].w) / 100;
+    int selectedSizeIndex, sizeIndex;
+
     SDL_Event events;
     State state = STATE_TITLE;
     State futureState = STATE_GAME;
-    SDL_Rect modeSelectionRect = SDL_Rect{textRects[TITLE_MODE].x, textRects[TITLE_MODE].y, textRects[TITLE_MODE].w / 6, textRects[TITLE_MODE].h};
-    int selectedSizeIndex, sizeIndex;
 
     while (state == STATE_TITLE)
     {
@@ -165,15 +190,15 @@ State event_loop_title(SDL_Renderer *pRenderer,
                 state = STATE_QUIT;
                 break;
 
-                // case SDL_MOUSEBUTTONDOWN:
-                //     if (events.button.button == SDL_BUTTON_LEFT)
-                //     {
-                //         if (mouse_over_rectangle(textRects[TITLE_MODE], events.button.x, events.button.y))
-                //         {
-                //             modeSelectionRect.x += 1;
-                //         }
-                //     }
-                //     break;
+            case SDL_MOUSEBUTTONDOWN:
+                if (events.button.button == SDL_BUTTON_LEFT)
+                {
+                    if (mouse_over_rectangle(textRects[TITLE_DEMO], events.button.x, events.button.y))
+                        futureState = STATE_DEMO;
+                    if (mouse_over_rectangle(textRects[TITLE_GAME], events.button.x, events.button.y))
+                        futureState = STATE_GAME;
+                }
+                break;
 
             case SDL_MOUSEMOTION:
                 selectedSizeIndex = -1;
@@ -190,7 +215,7 @@ State event_loop_title(SDL_Renderer *pRenderer,
         if (update_screen_title(pRenderer,
                                 pTextTextures, pPuzzleSizesTextures, pImgSDLTexture,
                                 textRects, puzzleSizesRects, imgSDLRect,
-                                modeSelectionRect, selectedSizeIndex) < 0)
+                                futureState, selectedSizeIndex) < 0)
             state = STATE_ERROR;
     }
 
@@ -205,7 +230,7 @@ int update_screen_title(SDL_Renderer *pRenderer,
                         SDL_Rect textRects[],
                         SDL_Rect puzzleSizesRects[],
                         SDL_Rect imgSDLRect,
-                        SDL_Rect modeSelectionRect,
+                        State futureState,
                         int selectedSizeIndex)
 {
     int i;
@@ -229,6 +254,18 @@ int update_screen_title(SDL_Renderer *pRenderer,
 
     if (SDL_RenderCopy(pRenderer, pImgSDLTexture, nullptr, &imgSDLRect) < 0)
         RETURN_ERR
+
+    if (futureState == STATE_GAME)
+    {
+        if (SDL_SetRenderDrawColor(pRenderer, 0, 0, 255, 127) < 0 || SDL_RenderFillRect(pRenderer, &textRects[TITLE_GAME]) < 0)
+            RETURN_ERR
+    }
+
+    else
+    {
+        if (SDL_SetRenderDrawColor(pRenderer, 0, 0, 255, 127) < 0 || SDL_RenderFillRect(pRenderer, &textRects[TITLE_DEMO]) < 0)
+            RETURN_ERR
+    }
 
     SDL_RenderPresent(pRenderer);
     return 0;

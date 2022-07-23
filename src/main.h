@@ -29,6 +29,7 @@ enum State
 {
     STATE_TITLE,
     STATE_GAME,
+    STATE_DEMO,
     STATE_QUIT,
     STATE_ERROR
 };
