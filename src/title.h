@@ -12,8 +12,7 @@
 #define TITLE_H_INCLUDED
 
 #include "check.h"
-
-#define NUMBER_OF_SIZES PUZZLE_SIZE_MAX - PUZZLE_SIZE_MIN + 1
+#include "mouse.h"
 
 State title(SDL_Renderer *pRenderer, TTF_Font *pFont);
 
@@ -30,14 +29,23 @@ int create_rectangles_title(SDL_Texture *pTextTextures[],
                             SDL_Rect puzzleSizesRects[],
                             SDL_Rect &imgSDLRect);
 
+State event_loop_title(SDL_Renderer *pRenderer,
+                       SDL_Texture *pTextTextures[],
+                       SDL_Texture *pPuzzleSizesTextures[],
+                       SDL_Texture *&pImgSDLTexture,
+                       SDL_Rect textRects[],
+                       SDL_Rect puzzleSizesRects[],
+                       SDL_Rect &imgSDLRect);
+
 int update_screen_title(SDL_Renderer *pRenderer,
                         SDL_Texture *pTextTextures[],
                         SDL_Texture *pPuzzleSizesTextures[],
-                        SDL_Texture *&pImgSDLTexture,
+                        SDL_Texture *pImgSDLTexture,
                         SDL_Rect textRects[],
                         SDL_Rect puzzleSizesRects[],
-                        SDL_Rect &imgSDLRect,
-                        SDL_Rect &selectionRect);
+                        SDL_Rect imgSDLRect,
+                        SDL_Rect modeSelectionRect,
+                        int selectedSizeindex);
 
 void destroy_textures_title(SDL_Texture *pTextTextures[],
                             SDL_Texture *pPuzzleSizesTextures[],

@@ -1,49 +1,31 @@
-#include "title.h"
+#include "title.h" //290lignes
 
 State title(SDL_Renderer *pRenderer, TTF_Font *pFont)
 {
     SDL_Texture *pTextTextures[TITLE_TEXT_NBR_OF_ELEMENTS] = {nullptr};
-    SDL_Texture *pPuzzleSizesTextures[NUMBER_OF_SIZES] = {nullptr};
+    SDL_Texture *pPuzzleSizesTextures[PUZZLE_SIZES] = {nullptr};
     SDL_Texture *pImgSDLTexture = nullptr;
 
     SDL_Rect textRects[TITLE_TEXT_NBR_OF_ELEMENTS];
-    SDL_Rect puzzleSizesRects[NUMBER_OF_SIZES];
+    SDL_Rect puzzleSizesRects[PUZZLE_SIZES];
     SDL_Rect imgSDLRect;
     SDL_Rect selectionRect = SDL_Rect{0, 0, 0, 0};
-
-    SDL_Event events;
-    State state = STATE_TITLE;
 
     if (create_textures_title(pRenderer, pFont, pTextTextures, pPuzzleSizesTextures, pImgSDLTexture) < 0)
         return STATE_ERROR;
 
     if (create_rectangles_title(pTextTextures, pPuzzleSizesTextures, pImgSDLTexture,
                                 textRects, puzzleSizesRects, imgSDLRect) < 0)
-        state = STATE_ERROR;
-
-    while (state == STATE_TITLE)
     {
-        while (SDL_PollEvent(&events))
-        {
-            switch (events.type)
-            {
-            case SDL_QUIT:
-                state = STATE_QUIT;
-                break;
-
-            default:
-                break;
-            }
-        }
-
-        if (update_screen_title(pRenderer,
-                                pTextTextures, pPuzzleSizesTextures, pImgSDLTexture,
-                                textRects, puzzleSizesRects, imgSDLRect, selectionRect) < 0)
-            state = STATE_ERROR;
+        destroy_textures_title(pTextTextures, pPuzzleSizesTextures, pImgSDLTexture);
+        return STATE_ERROR;
     }
 
-    destroy_textures_title(pTextTextures, pPuzzleSizesTextures, pImgSDLTexture);
-    return state;
+    SDL_SetRenderDrawBlendMode(pRenderer, SDL_BLENDMODE_BLEND);
+
+    return event_loop_title(pRenderer,
+                            pTextTextures, pPuzzleSizesTextures, pImgSDLTexture,
+                            textRects, puzzleSizesRects, imgSDLRect);
 }
 
 int create_textures_title(SDL_Renderer *&pRenderer,
@@ -75,11 +57,12 @@ int create_textures_title(SDL_Renderer *&pRenderer,
         {
             for (j = 0; j < i; j++)
                 SDL_DestroyTexture(pTextTextures[j]);
+            error_message();
             return -1;
         }
     }
 
-    for (i = 0; i <= PUZZLE_SIZE_MAX - PUZZLE_SIZE_MIN; i++)
+    for (i = 0; i < PUZZLE_SIZES; i++)
     {
         puzzleSizeInt = i + PUZZLE_SIZE_MIN;
         std::sprintf(puzzleSizeChar, "%d", i + PUZZLE_SIZE_MIN);
@@ -92,6 +75,7 @@ int create_textures_title(SDL_Renderer *&pRenderer,
             for (j = 0; j < i; j++)
                 SDL_DestroyTexture(pPuzzleSizesTextures[j]);
 
+            error_message();
             return -1;
         }
     }
@@ -104,6 +88,7 @@ int create_textures_title(SDL_Renderer *&pRenderer,
         for (j = 0; j <= PUZZLE_SIZE_MAX - PUZZLE_SIZE_MIN; j++)
             SDL_DestroyTexture(pPuzzleSizesTextures[j]);
 
+        error_message();
         return -1;
     }
 
@@ -120,28 +105,16 @@ int create_rectangles_title(SDL_Texture *pTextTextures[],
     int i;
 
     for (i = 0; i < TITLE_TEXT_NBR_OF_ELEMENTS; i++)
-    {
         if (SDL_QueryTexture(pTextTextures[i], nullptr, nullptr, &textRects[i].w, &textRects[i].h) < 0)
-        {
-            error_message();
-            return -1;
-        }
-    }
+            RETURN_ERR
 
     for (i = 0; i <= PUZZLE_SIZE_MAX - PUZZLE_SIZE_MIN; i++)
-    {
         if (SDL_QueryTexture(pPuzzleSizesTextures[i], nullptr, nullptr, &puzzleSizesRects[i].w, &puzzleSizesRects[i].h) < 0)
-        {
-            error_message();
-            return -1;
-        }
-    }
+            RETURN_ERR
 
     if (SDL_QueryTexture(pImgSDLTexture, nullptr, nullptr, &imgSDLRect.w, &imgSDLRect.h) < 0)
-    {
-        error_message();
-        return -1;
-    }
+        RETURN_ERR
+
     imgSDLRect.w = (3 * imgSDLRect.w) / 4;
     imgSDLRect.h = (3 * imgSDLRect.h) / 4;
 
@@ -168,42 +141,94 @@ int create_rectangles_title(SDL_Texture *pTextTextures[],
     return 0;
 }
 
+State event_loop_title(SDL_Renderer *pRenderer,
+                       SDL_Texture *pTextTextures[],
+                       SDL_Texture *pPuzzleSizesTextures[],
+                       SDL_Texture *&pImgSDLTexture,
+                       SDL_Rect textRects[],
+                       SDL_Rect puzzleSizesRects[],
+                       SDL_Rect &imgSDLRect)
+{
+    SDL_Event events;
+    State state = STATE_TITLE;
+    State futureState = STATE_GAME;
+    SDL_Rect modeSelectionRect = SDL_Rect{textRects[TITLE_MODE].x, textRects[TITLE_MODE].y, textRects[TITLE_MODE].w / 6, textRects[TITLE_MODE].h};
+    int selectedSizeIndex, sizeIndex;
+
+    while (state == STATE_TITLE)
+    {
+        while (SDL_PollEvent(&events))
+        {
+            switch (events.type)
+            {
+            case SDL_QUIT:
+                state = STATE_QUIT;
+                break;
+
+                // case SDL_MOUSEBUTTONDOWN:
+                //     if (events.button.button == SDL_BUTTON_LEFT)
+                //     {
+                //         if (mouse_over_rectangle(textRects[TITLE_MODE], events.button.x, events.button.y))
+                //         {
+                //             modeSelectionRect.x += 1;
+                //         }
+                //     }
+                //     break;
+
+            case SDL_MOUSEMOTION:
+                selectedSizeIndex = -1;
+                for (sizeIndex = 0; sizeIndex < PUZZLE_SIZES; sizeIndex++)
+                    if (mouse_over_rectangle(puzzleSizesRects[sizeIndex], events.motion.x, events.motion.y))
+                        selectedSizeIndex = sizeIndex;
+                break;
+
+            default:
+                break;
+            }
+        }
+
+        if (update_screen_title(pRenderer,
+                                pTextTextures, pPuzzleSizesTextures, pImgSDLTexture,
+                                textRects, puzzleSizesRects, imgSDLRect,
+                                modeSelectionRect, selectedSizeIndex) < 0)
+            state = STATE_ERROR;
+    }
+
+    destroy_textures_title(pTextTextures, pPuzzleSizesTextures, pImgSDLTexture);
+    return state;
+}
+
 int update_screen_title(SDL_Renderer *pRenderer,
                         SDL_Texture *pTextTextures[],
                         SDL_Texture *pPuzzleSizesTextures[],
-                        SDL_Texture *&pImgSDLTexture,
+                        SDL_Texture *pImgSDLTexture,
                         SDL_Rect textRects[],
                         SDL_Rect puzzleSizesRects[],
-                        SDL_Rect &imgSDLRect,
-                        SDL_Rect &selectionRect)
+                        SDL_Rect imgSDLRect,
+                        SDL_Rect modeSelectionRect,
+                        int selectedSizeIndex)
 {
     int i;
-    SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
-    SDL_RenderClear(pRenderer);
+
+    if (SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255) < 0 || SDL_RenderClear(pRenderer) < 0)
+        RETURN_ERR
 
     for (i = 0; i < TITLE_TEXT_NBR_OF_ELEMENTS; i++)
-    {
         if (SDL_RenderCopy(pRenderer, pTextTextures[i], nullptr, &textRects[i]) < 0)
-        {
-            error_message();
-            return -1;
-        }
-    }
+            RETURN_ERR
 
     for (i = 0; i < PUZZLE_SIZES; i++)
     {
         if (SDL_RenderCopy(pRenderer, pPuzzleSizesTextures[i], nullptr, &puzzleSizesRects[i]) < 0)
-        {
-            error_message();
-            return -1;
-        }
+            RETURN_ERR
+
+        if (i == selectedSizeIndex)
+            if (SDL_SetRenderDrawColor(pRenderer, 0, 255, 0, 127) < 0 || SDL_RenderFillRect(pRenderer, &puzzleSizesRects[i]) < 0)
+                RETURN_ERR
     }
 
     if (SDL_RenderCopy(pRenderer, pImgSDLTexture, nullptr, &imgSDLRect) < 0)
-    {
-        error_message();
-        return -1;
-    }
+        RETURN_ERR
 
     SDL_RenderPresent(pRenderer);
     return 0;

@@ -21,6 +21,8 @@
 #define FONT_PATH "res/font/times.ttf"
 #define FONT_SIZE 40
 
+#define RETURN_ERR {error_message(); return-1;}
+
 void error_message(); // Logs the error message from SDL
 
 int init_SDL();
