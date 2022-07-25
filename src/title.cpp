@@ -1,6 +1,6 @@
-#include "title.h" //290lignes
+#include "title.h"
 
-State title(SDL_Renderer *pRenderer, TTF_Font *pFont)
+State title(SDL_Renderer *pRenderer, TTF_Font *pFont, int &puzzleSize)
 {
     SDL_Texture *pTextTextures[TITLE_TEXT_NBR_OF_ELEMENTS] = {nullptr};
     SDL_Texture *pPuzzleSizesTextures[PUZZLE_SIZES] = {nullptr};
@@ -24,7 +24,7 @@ State title(SDL_Renderer *pRenderer, TTF_Font *pFont)
 
     return event_loop_title(pRenderer,
                             pTextTextures, pPuzzleSizesTextures, pImgSDLTexture,
-                            textRects, puzzleSizesRects, imgSDLRect);
+                            textRects, puzzleSizesRects, imgSDLRect, puzzleSize);
 }
 
 int create_textures_title(SDL_Renderer *&pRenderer,
@@ -170,7 +170,8 @@ State event_loop_title(SDL_Renderer *pRenderer,
                        SDL_Texture *&pImgSDLTexture,
                        SDL_Rect textRects[],
                        SDL_Rect puzzleSizesRects[],
-                       SDL_Rect &imgSDLRect)
+                       SDL_Rect &imgSDLRect,
+                       int &puzzleSize)
 {
     const int X_GAME = textRects[TITLE_MODE].x + (50 * textRects[TITLE_MODE].w) / 100;
     const int X_DEMO = X_GAME + (30 * textRects[TITLE_MODE].w) / 100;
@@ -179,6 +180,8 @@ State event_loop_title(SDL_Renderer *pRenderer,
     SDL_Event events;
     State state = STATE_TITLE;
     State futureState = STATE_GAME;
+
+    int size;
 
     while (state == STATE_TITLE)
     {
@@ -197,6 +200,13 @@ State event_loop_title(SDL_Renderer *pRenderer,
                         futureState = STATE_DEMO;
                     if (mouse_over_rectangle(textRects[TITLE_GAME], events.button.x, events.button.y))
                         futureState = STATE_GAME;
+
+                    for (size = 0; size < PUZZLE_SIZES; size++)
+                        if (mouse_over_rectangle(puzzleSizesRects[size], events.button.x, events.button.y))
+                        {
+                            state = futureState;
+                            puzzleSize = size + PUZZLE_SIZE_MIN;
+                        }
                 }
                 break;
 
