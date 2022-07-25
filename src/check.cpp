@@ -1,4 +1,4 @@
-#include "initialisation-closure.h"
+#include "check.h"
 
 void error_message()
 {
@@ -12,12 +12,9 @@ void error_message()
 int init_SDL()
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
-    {
-        error_message();
-        return -1;
-    }
-    else
-        return 0;
+        RETURN_ERR
+
+    return 0;
 }
 
 int init_TTF()
@@ -76,15 +73,32 @@ void close_program(SDL_Window *pWindow, SDL_Renderer *pRenderer, TTF_Font *pFont
     SDL_Quit();
 }
 
-int create_text_surface(SDL_Surface *&textSurface, TTF_Font *font, char *text, SDL_Colour fgColour, SDL_Colour bgColour)
+int create_text_texture(SDL_Texture *&pTextTexture, TTF_Font *pFont, char *text, SDL_Colour fgColour, SDL_Colour bgColour, SDL_Renderer *pRenderer)
 {
-    textSurface = TTF_RenderText_Shaded(font, text, fgColour, bgColour);
+    SDL_Surface *pTextSurface = TTF_RenderText_Shaded(pFont, text, fgColour, bgColour);
 
-    if (textSurface == nullptr)
-    {
-        error_message();
-        return -1;
-    }
-    else
-        return 0;
+    if (pTextSurface == nullptr || surface_to_texture(pTextTexture, pTextSurface, pRenderer))
+        RETURN_ERR
+
+    return 0;
+}
+
+int create_img_texture(SDL_Texture *&pImgTexture, char *imgPath, SDL_Renderer *pRenderer)
+{
+    SDL_Surface *pImgSurface = IMG_Load(imgPath);
+    if (pImgSurface == nullptr || surface_to_texture(pImgTexture, pImgSurface, pRenderer) < 0)
+        RETURN_ERR
+
+    return 0;
+}
+
+int surface_to_texture(SDL_Texture *&pTexture, SDL_Surface *pSurface, SDL_Renderer *pRenderer)
+{
+    pTexture = SDL_CreateTextureFromSurface(pRenderer, pSurface);
+    SDL_FreeSurface(pSurface);
+
+    if (pTexture == nullptr)
+        RETURN_ERR
+
+    return 0;
 }

@@ -13,21 +13,24 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 
 #define WINDOW_WIDTH 629
 #define WINDOW_HEIGHT 629
 
-#define MINIMUM_SIZE 3
-#define MAXIMUM_SIZE 10
+#define PUZZLE_SIZE_MIN 2
+#define PUZZLE_SIZE_MAX 10
+#define PUZZLE_SIZES PUZZLE_SIZE_MAX - PUZZLE_SIZE_MIN + 1
 
 #define FPS 20
 #define PAUSE 1000 / FPS
 
-enum Mode
+enum State
 {
-    MODE_TITLE,
-    MODE_GAME,
-    MODE_QUIT,
-    MODE_ERROR
+    STATE_TITLE,
+    STATE_GAME,
+    STATE_DEMO,
+    STATE_QUIT,
+    STATE_ERROR
 };
 #endif // CONSTANTS_H_INCLUDED
