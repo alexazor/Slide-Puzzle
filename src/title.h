@@ -14,7 +14,7 @@
 #include "check.h"
 #include "mouse.h"
 
-State title(SDL_Renderer *pRenderer, TTF_Font *pFont);
+State title(SDL_Renderer *pRenderer, TTF_Font *pFont, int &puzzleSize);
 
 int create_textures_title(SDL_Renderer *&pRenderer,
                           TTF_Font *pFont,
@@ -35,7 +35,8 @@ State event_loop_title(SDL_Renderer *pRenderer,
                        SDL_Texture *&pImgSDLTexture,
                        SDL_Rect textRects[],
                        SDL_Rect puzzleSizesRects[],
-                       SDL_Rect &imgSDLRect);
+                       SDL_Rect &imgSDLRect,
+                       int &puzzleSize);
 
 int update_screen_title(SDL_Renderer *pRenderer,
                         SDL_Texture *pTextTextures[],
