@@ -14,9 +14,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
+#include <time.h>
 
-#define WINDOW_WIDTH 629
-#define WINDOW_HEIGHT 629
+#define DEFAULT_WINDOW_WIDTH 629
+#define DEFAULT_WINDOW_HEIGHT 629
 
 #define PUZZLE_SIZE_MIN 2
 #define PUZZLE_SIZE_MAX 10

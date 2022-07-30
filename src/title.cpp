@@ -173,8 +173,6 @@ State event_loop_title(SDL_Renderer *pRenderer,
                        SDL_Rect &imgSDLRect,
                        int &puzzleSize)
 {
-    const int X_GAME = textRects[TITLE_MODE].x + (50 * textRects[TITLE_MODE].w) / 100;
-    const int X_DEMO = X_GAME + (30 * textRects[TITLE_MODE].w) / 100;
     int selectedSizeIndex, sizeIndex;
 
     SDL_Event events;
