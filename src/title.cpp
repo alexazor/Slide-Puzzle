@@ -131,35 +131,35 @@ int create_rectangles_title(SDL_Texture *pTextTextures[],
     space_width_modes = textRects[TITLE_GAME].w / 2;
     textHeight = textRects[TITLE_TITLE].h;
 
-    textRects[TITLE_TITLE].x = (WINDOW_WIDTH - textRects[TITLE_TITLE].w) / 2;
+    textRects[TITLE_TITLE].x = (DEFAULT_WINDOW_WIDTH - textRects[TITLE_TITLE].w) / 2;
     textRects[TITLE_TITLE].y = 0;
 
-    textRects[TITLE_INSTRUCTION].x = (WINDOW_WIDTH - textRects[TITLE_INSTRUCTION].w) / 2;
+    textRects[TITLE_INSTRUCTION].x = (DEFAULT_WINDOW_WIDTH - textRects[TITLE_INSTRUCTION].w) / 2;
     textRects[TITLE_INSTRUCTION].y = 1.5 * textHeight;
 
-    textRects[TITLE_MODE].x = (WINDOW_WIDTH - textRects[TITLE_MODE].w - textRects[TITLE_GAME].w - textRects[TITLE_DEMO].w) / 2 - space_width_modes;
+    textRects[TITLE_MODE].x = (DEFAULT_WINDOW_WIDTH - textRects[TITLE_MODE].w - textRects[TITLE_GAME].w - textRects[TITLE_DEMO].w) / 2 - space_width_modes;
     textRects[TITLE_MODE].y = 3 * textHeight;
 
-    textRects[TITLE_GAME].x = (WINDOW_WIDTH + textRects[TITLE_MODE].w - textRects[TITLE_GAME].w - textRects[TITLE_DEMO].w) / 2;
+    textRects[TITLE_GAME].x = (DEFAULT_WINDOW_WIDTH + textRects[TITLE_MODE].w - textRects[TITLE_GAME].w - textRects[TITLE_DEMO].w) / 2;
     textRects[TITLE_GAME].y = 3 * textHeight;
 
-    textRects[TITLE_DEMO].x = (WINDOW_WIDTH + textRects[TITLE_MODE].w + textRects[TITLE_GAME].w - textRects[TITLE_DEMO].w) / 2 + space_width_modes;
+    textRects[TITLE_DEMO].x = (DEFAULT_WINDOW_WIDTH + textRects[TITLE_MODE].w + textRects[TITLE_GAME].w - textRects[TITLE_DEMO].w) / 2 + space_width_modes;
     textRects[TITLE_DEMO].y = 3 * textHeight;
 
-    textRects[TITLE_PRESS_P].x = (WINDOW_WIDTH - textRects[TITLE_PRESS_P].w) / 2;
-    textRects[TITLE_PRESS_P].y = WINDOW_HEIGHT - 2 * textHeight;
+    textRects[TITLE_PRESS_P].x = (DEFAULT_WINDOW_WIDTH - textRects[TITLE_PRESS_P].w) / 2;
+    textRects[TITLE_PRESS_P].y = DEFAULT_WINDOW_HEIGHT - 2 * textHeight;
 
     //---Position for the puzzle size textures
-    space_width_puzzle_sizes = WINDOW_WIDTH / (1 + PUZZLE_SIZES) - puzzleSizesRects[0].w;
+    space_width_puzzle_sizes = DEFAULT_WINDOW_WIDTH / (1 + PUZZLE_SIZES) - puzzleSizesRects[0].w;
     for (i = 0; i < PUZZLE_SIZES; i++)
     {
         puzzleSizesRects[i].x = space_width_puzzle_sizes + i * (puzzleSizesRects[0].w + space_width_puzzle_sizes);
-        puzzleSizesRects[i].y = (WINDOW_HEIGHT + imgSDLRect.h) / 2 + 0.5 * puzzleSizesRects[i].h;
+        puzzleSizesRects[i].y = (DEFAULT_WINDOW_HEIGHT + imgSDLRect.h) / 2 + 0.5 * puzzleSizesRects[i].h;
     }
 
     //---Position of the image
-    imgSDLRect.x = (WINDOW_WIDTH - imgSDLRect.w) / 2;
-    imgSDLRect.y = (WINDOW_HEIGHT - imgSDLRect.h) / 2;
+    imgSDLRect.x = (DEFAULT_WINDOW_WIDTH - imgSDLRect.w) / 2;
+    imgSDLRect.y = (DEFAULT_WINDOW_HEIGHT - imgSDLRect.h) / 2;
 
     return 0;
 }

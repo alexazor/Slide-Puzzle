@@ -31,7 +31,7 @@ int init_TTF()
 
 int create_window(SDL_Window *&pWindow, SDL_Renderer *&pRenderer)
 {
-    if (SDL_CreateWindowAndRenderer(WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN, &pWindow, &pRenderer) < 0)
+    if (SDL_CreateWindowAndRenderer(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, SDL_WINDOW_SHOWN, &pWindow, &pRenderer) < 0)
     {
         SDL_Quit();
         TTF_Quit();

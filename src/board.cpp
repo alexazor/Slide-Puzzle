@@ -14,6 +14,7 @@ void resize_window_board(SDL_Window *pWindow, int puzzleSize, int &bloc_width, i
 void shuffle_board(int map[], int puzzleSize)
 {
   const int NUMBER_OF_BLOCS = puzzleSize * puzzleSize;
+  int numberOfMoves = NUMBER_OF_BLOCS * NUMBER_OF_BLOCS;
 
   for (int index = 0; index < NUMBER_OF_BLOCS; index++)
     map[index] = index;
