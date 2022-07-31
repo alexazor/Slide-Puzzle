@@ -13,15 +13,15 @@
 
 #include "board.h"
 
-State game(SDL_Renderer *pRenderer, TTF_Font *pFont, int puzzleSize, int bloc_width, int bloc_height, int window_width, int window_height);
+State game(SDL_Renderer *pRenderer, TTF_Font *pFont, int puzzleSize, int block_width, int block_height, int window_width, int window_height);
 
 State event_loop_game(SDL_Renderer *pRenderer,
                       SDL_Texture *pNumbersTextures[],
                       SDL_Rect numbersRects[],
                       int puzzleSize,
                       int map[],
-                      int bloc_width,
-                      int bloc_height,
+                      int block_width,
+                      int block_height,
                       int window_width,
                       int window_height);
 

@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     TTF_Font *pFont = nullptr;
 
     int puzzleSize = 0;
-    int bloc_width, bloc_height, window_height, window_width;
+    int block_width, block_height, window_height, window_width;
 
     State state = STATE_TITLE;
 
@@ -30,8 +30,8 @@ int main(int argc, char *argv[])
             break;
 
         case STATE_GAME:
-            resize_window_board(pWindow, puzzleSize, bloc_width, bloc_height, window_width, window_height);
-            state = game(pRenderer, pFont, puzzleSize, bloc_width, bloc_height, window_width, window_height);
+            resize_window_board(pWindow, puzzleSize, block_width, block_height, window_width, window_height);
+            state = game(pRenderer, pFont, puzzleSize, block_width, block_height, window_width, window_height);
             break;
 
         case STATE_DEMO:

@@ -15,9 +15,19 @@
 
 #define SEP_SIZE 2
 
-void resize_window_board(SDL_Window *pWindow, int puzzleSize, int &bloc_width, int &bloc_height, int &window_width, int &window_height);
+enum Block_direction
+{
+    BLOCK_UP,
+    BLOCK_LEFT,
+    BLOCK_DOWN,
+    BLOCK_RIGHT
+};
 
-void shuffle_board(int map[], int puzzleSize);
+void resize_window_board(SDL_Window *pWindow, int puzzleSize, int &block_width, int &block_height, int &window_width, int &window_height);
+
+void move_block(int map[], int puzzleSize, int &iVoid, int &jVoid, Block_direction dir, SDL_Rect numbersRect[], int block_width, int block_height);
+
+void shuffle_board(int map[], int puzzleSize, SDL_Rect numbersRect[], int block_width, int block_height);
 
 int create_textures_board(SDL_Renderer *&pRenderer,
                           TTF_Font *pFont,
@@ -27,26 +37,18 @@ int create_textures_board(SDL_Renderer *&pRenderer,
 int create_rectangles_board(SDL_Texture *pNumbersTextures[],
                             SDL_Rect numbersRects[],
                             int puzzleSize,
-                            int bloc_width,
-                            int bloc_height);
+                            int block_width,
+                            int block_height);
 
 int update_screen_board(SDL_Renderer *pRenderer,
                         SDL_Texture *pNumbersTextures[],
                         SDL_Rect numbersRects[],
-                        SDL_Rect *blocRect,
-                        int blocToPlace,
+                        SDL_Rect *blockRect,
+                        int blockToPlace,
                         int puzzleSize,
                         int map[],
-                        int bloc_width,
-                        int bloc_height);
+                        int block_width,
+                        int block_height);
 
 void destroy_textures_board(SDL_Texture *pNumberTextures[], int puzzleSize);
-
-enum Board_direction
-{
-    BOARD_UP,
-    BOARD_DOWN,
-    BOARD_LEFT,
-    BOARD_RIGHT
-};
 #endif // BOARD_H_INCLUDED

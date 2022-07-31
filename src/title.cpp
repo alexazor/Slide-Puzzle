@@ -41,7 +41,7 @@ int create_textures_title(SDL_Renderer *&pRenderer,
     char textMode[] = {"Click to change:"};
     char textGame[] = {"Game"};
     char textDemo[] = {"Demo"};
-    char textPressP[] = {"P: Highlight the first misplaced bloc"};
+    char textPressP[] = {"P: Highlight the first misplaced block"};
     char *textsArray[] = {textTitle,
                           textInstruction,
                           textMode,
