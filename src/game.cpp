@@ -44,7 +44,9 @@ State event_loop_game(SDL_Renderer *pRenderer,
 
     SDL_Rect blockRect = SDL_Rect{0, 0, block_width, block_height};
 
-    int size;
+    int size, iClick, jClick, iVoid, jVoid;
+
+    find_void(map, puzzleSize, iVoid, jVoid);
 
     while (state == STATE_GAME)
     {
@@ -56,23 +58,20 @@ State event_loop_game(SDL_Renderer *pRenderer,
                 state = STATE_TITLE;
                 break;
 
-                // case SDL_MOUSEBUTTONDOWN:
-                //     if (events.button.button == SDL_BUTTON_LEFT)
-                //     break;
-
-                // case SDL_MOUSEMOTION:
-                //     selectedSizeIndex = -1;
-                //     for (sizeIndex = 0; sizeIndex < PUZZLE_SIZES; sizeIndex++)
-                //         if (mouse_over_rectangle(puzzleSizesRects[sizeIndex], events.motion.x, events.motion.y))
-                //             selectedSizeIndex = sizeIndex;
-                //     break;
+            case SDL_MOUSEBUTTONDOWN:
+                if (events.button.button == SDL_BUTTON_LEFT)
+                {
+                    get_block_position(events.button.x, events.button.y, block_height, block_width, iClick, jClick);
+                    move_line(map, puzzleSize, iClick, jClick, iVoid, jVoid, numbersRects, block_width, block_height);
+                }
+                break;
 
             default:
                 break;
             }
         }
 
-        if (update_screen_board(pRenderer, pNumbersTextures, numbersRects, &blockRect, NUMBER_OF_BLOCS - puzzleSize, puzzleSize, map, block_width, block_height) < 0)
+        if (update_screen_board(pRenderer, pNumbersTextures, numbersRects, &blockRect, puzzleSize, map, block_width, block_height) < 0)
             state = STATE_ERROR;
     }
 

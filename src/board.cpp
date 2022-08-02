@@ -1,5 +1,14 @@
 #include "board.h"
 
+bool resolved(int map[], int puzzleSize)
+{
+  for (int index = 0; index < puzzleSize; index++)
+    if (index != map[index])
+      return false;
+
+  return true;
+}
+
 void resize_window_board(SDL_Window *pWindow, int puzzleSize, int &block_width, int &block_height, int &window_width, int &window_height)
 {
   block_width = (DEFAULT_WINDOW_WIDTH - puzzleSize * SEP_SIZE) / puzzleSize;
@@ -11,9 +20,9 @@ void resize_window_board(SDL_Window *pWindow, int puzzleSize, int &block_width, 
   SDL_SetWindowSize(pWindow, window_width, window_height);
 }
 
-void move_block(int map[], int puzzleSize, int &iVoid, int &jVoid, Block_direction dir, SDL_Rect numbersRect[], int block_width, int block_height)
+void move_block(int map[], int puzzleSize, int &iVoid, int &jVoid, int dir, SDL_Rect numbersRect[], int block_width, int block_height)
 {
-  int indexBlock, intermediate;
+  int indexBlock, intermediate, numBlock;
   int indexVoid = iVoid * puzzleSize + jVoid;
   int iBlock = iVoid;
   int jBlock = jVoid;
@@ -50,20 +59,26 @@ void move_block(int map[], int puzzleSize, int &iVoid, int &jVoid, Block_directi
     break;
 
   default:
+    SDL_Log("----->%d\n", dir);
+    return;
     break;
   }
 
-  indexBlock = iBlock * puzzleSize + jBlock;
+  if (0 <= iBlock && iBlock < puzzleSize && 0 <= jBlock && jBlock < puzzleSize)
+  {
+    indexBlock = iBlock * puzzleSize + jBlock;
+    numBlock = map[indexBlock];
 
-  numbersRect[indexBlock].x += xDifBlock;
-  numbersRect[indexBlock].y += yDifBlock;
+    numbersRect[numBlock].x += xDifBlock;
+    numbersRect[numBlock].y += yDifBlock;
 
-  iVoid += iDifVoid;
-  jVoid += jDifVoid;
+    iVoid += iDifVoid;
+    jVoid += jDifVoid;
 
-  intermediate = map[indexBlock];
-  map[indexBlock] = map[indexVoid];
-  map[indexVoid] = intermediate;
+    intermediate = map[indexBlock];
+    map[indexBlock] = map[indexVoid];
+    map[indexVoid] = intermediate;
+  }
 }
 
 void shuffle_board(int map[], int puzzleSize, SDL_Rect numbersRect[], int block_width, int block_height)
@@ -72,12 +87,39 @@ void shuffle_board(int map[], int puzzleSize, SDL_Rect numbersRect[], int block_
   int numberOfMoves = NUMBER_OF_BLOCS * NUMBER_OF_BLOCS;
   int iVoid = puzzleSize - 1;
   int jVoid = puzzleSize - 1;
+  int index, direction;
 
-  for (int index = 0; index < NUMBER_OF_BLOCS; index++)
+  int prevDirection = BLOCK_DOWN;
+
+  for (index = 0; index < NUMBER_OF_BLOCS; index++)
     map[index] = index;
 
-  move_block(map, puzzleSize, iVoid, jVoid, BLOCK_RIGHT, numbersRect, block_width, block_height);
-  move_block(map, puzzleSize, iVoid, jVoid, BLOCK_DOWN, numbersRect, block_width, block_height);
+  while (resolved(map, puzzleSize))
+  {
+    for (int i = 0; i < numberOfMoves; i++)
+    {
+      direction = rand() % 4;
+
+      if ((direction + 2) % 4 != prevDirection)
+      {
+        prevDirection = direction;
+        move_block(map, puzzleSize, iVoid, jVoid, direction, numbersRect, block_width, block_height);
+      }
+      else
+        i--;
+    }
+  }
+}
+
+void find_void(int map[], int puzzleSize, int &iVoid, int &jVoid)
+{
+  for (int i = 0; i < puzzleSize; i++)
+    for (int j = 0; j < puzzleSize; j++)
+      if (map[i * puzzleSize + j] == puzzleSize * puzzleSize - 1)
+      {
+        iVoid = i;
+        jVoid = j;
+      }
 }
 
 int create_textures_board(SDL_Renderer *&pRenderer,
@@ -138,14 +180,19 @@ int update_screen_board(SDL_Renderer *pRenderer,
                         SDL_Texture *pNumbersTextures[],
                         SDL_Rect numbersRects[],
                         SDL_Rect *blockRect,
-                        int blockToPlace,
                         int puzzleSize,
                         int map[],
                         int block_width,
                         int block_height)
 {
   int i, j, numBlock, blockIndex;
+  bool knownNextBlockToPlace = false;
+
   const int NUMBER_OF_BLOCS = puzzleSize * puzzleSize;
+
+  int numBlockToPlace = NUMBER_OF_BLOCS - 1;
+  int iBlockToPlace = puzzleSize - 1;
+  int jBlockToPlace = puzzleSize - 1;
 
   if (SDL_SetRenderDrawColor(pRenderer, 255, 255, 255, 255) < 0 || SDL_RenderClear(pRenderer) < 0)
     RETURN_ERR
@@ -170,12 +217,29 @@ int update_screen_board(SDL_Renderer *pRenderer,
         if (SDL_RenderCopy(pRenderer, pNumbersTextures[numBlock], nullptr, &numbersRects[numBlock]) < 0)
           RETURN_ERR
 
-        if (numBlock + 1 == blockToPlace)
-          if (SDL_SetRenderDrawColor(pRenderer, 0, 255, 0, 127) < 0 || SDL_RenderFillRect(pRenderer, blockRect) < 0)
+        if (numBlock == blockIndex)
+        {
+          if (SDL_SetRenderDrawColor(pRenderer, 0, 0, 255, 127) < 0 || SDL_RenderFillRect(pRenderer, blockRect) < 0)
             RETURN_ERR
+        }
+        else
+        {
+          if (numBlock < numBlockToPlace)
+          {
+            numBlockToPlace = numBlock;
+            iBlockToPlace = i;
+            jBlockToPlace = j;
+          }
+        }
       }
     }
   }
+
+  blockRect->x = jBlockToPlace * (block_width + SEP_SIZE);
+  blockRect->y = iBlockToPlace * (block_height + SEP_SIZE);
+
+  if (SDL_SetRenderDrawColor(pRenderer, 0, 255, 0, 127) < 0 || SDL_RenderFillRect(pRenderer, blockRect) < 0)
+    RETURN_ERR
 
   SDL_RenderPresent(pRenderer);
   return 0;

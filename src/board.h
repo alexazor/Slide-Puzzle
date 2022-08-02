@@ -17,17 +17,21 @@
 
 enum Block_direction
 {
-    BLOCK_UP,
+    BLOCK_UP = 0,
     BLOCK_LEFT,
     BLOCK_DOWN,
     BLOCK_RIGHT
 };
 
+bool resolved(int map[], int puzzleSize);
+
 void resize_window_board(SDL_Window *pWindow, int puzzleSize, int &block_width, int &block_height, int &window_width, int &window_height);
 
-void move_block(int map[], int puzzleSize, int &iVoid, int &jVoid, Block_direction dir, SDL_Rect numbersRect[], int block_width, int block_height);
+void move_block(int map[], int puzzleSize, int &iVoid, int &jVoid, int dir, SDL_Rect numbersRect[], int block_width, int block_height);
 
 void shuffle_board(int map[], int puzzleSize, SDL_Rect numbersRect[], int block_width, int block_height);
+
+void find_void(int map[], int puzzleSize, int &iVoid, int &jVoid);
 
 int create_textures_board(SDL_Renderer *&pRenderer,
                           TTF_Font *pFont,
@@ -44,7 +48,6 @@ int update_screen_board(SDL_Renderer *pRenderer,
                         SDL_Texture *pNumbersTextures[],
                         SDL_Rect numbersRects[],
                         SDL_Rect *blockRect,
-                        int blockToPlace,
                         int puzzleSize,
                         int map[],
                         int block_width,
