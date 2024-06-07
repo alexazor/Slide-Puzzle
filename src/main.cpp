@@ -1,8 +1,8 @@
 #include <cstdlib>
-#include "main.h"
-#include "check.h"
-#include "title.h"
-#include "game.h"
+#include "main.hpp"
+#include "check.hpp"
+#include "title.hpp"
+#include "game.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 
         case STATE_DEMO:
             SDL_Log("DEMO\n-->%d", puzzleSize);
-            SDL_Delay(4000);
+            SDL_Log("Error! Non implemented yet!");
             close_program(pWindow, pRenderer, pFont);
             return EXIT_SUCCESS;
             break;

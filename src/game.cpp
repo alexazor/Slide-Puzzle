@@ -50,7 +50,7 @@ State event_loop_game(SDL_Renderer *pRenderer,
 
     while (state == STATE_GAME)
     {
-        while (SDL_PollEvent(&events))
+        while (SDL_WaitEvent(&events))
         {
             switch (events.type)
             {

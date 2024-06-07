@@ -1,20 +1,20 @@
 /**
- * @file constants.h
+ * @file MAIN.h
  * @author Alexandre AZOR
  * @brief Contants used throughout the whole program
- * @version 0.1
+ * @version 0.2
  * @date 2022-07-15
  *
  *
  */
 
-#ifndef CONSTANTS_H_INCLUDED
-#define CONSTANTS_H_INCLUDED
+#ifndef MAIN_H_INCLUDED
+#define MAIN_H_INCLUDED
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
-#include <time.h>
+// #include <time.h>
 
 #define DEFAULT_WINDOW_WIDTH 629
 #define DEFAULT_WINDOW_HEIGHT 629
@@ -26,7 +26,7 @@
 #define FPS 20
 #define PAUSE 1000 / FPS
 
-enum State
+enum Program_State
 {
     STATE_TITLE,
     STATE_GAME,
@@ -34,4 +34,4 @@ enum State
     STATE_QUIT,
     STATE_ERROR
 };
-#endif // CONSTANTS_H_INCLUDED
+#endif // MAIN_H_INCLUDED
