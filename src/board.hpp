@@ -1,17 +1,17 @@
 /**
-*@file initialisation - closure.h
+*@file board.hpp
 *@author Alexandre AZOR
 *@brief Functions like initialisation or
-*@version 0.1
-* @date 2022-07-25
+*@version 1.0
+* @date 2024-06-08
 
 */
 
 #ifndef BOARD_H_INCLUDED
 #define BOARD_H_INCLUDED
 
-#include "main.h"
-#include "check.h"
+#include "main.hpp"
+#include "check.hpp"
 
 #define SEP_SIZE 2
 

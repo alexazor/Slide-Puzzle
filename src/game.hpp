@@ -1,9 +1,9 @@
 /**
- * @file game.h
+ * @file game.hpp
  * @author Alexandre AZOR
  * @brief Functions for the title page
- * @version 0.1
- * @date 2022-07-28
+ * @version 1.0
+ * @date 2024-06-08
  *
  *
  */
@@ -11,8 +11,8 @@
 #ifndef GAME_H_INCLUDED
 #define GAME_H_INCLUDED
 
-#include "board.h"
-#include "mouse.h"
+#include "board.hpp"
+#include "mouse.hpp"
 
 State game(SDL_Renderer *pRenderer, TTF_Font *pFont, int puzzleSize, int block_width, int block_height, int window_width, int window_height);
 

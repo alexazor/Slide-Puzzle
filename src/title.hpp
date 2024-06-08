@@ -1,5 +1,5 @@
 /**
- * @file title.h
+ * @file title.hpp
  * @author Alexandre AZOR
  * @brief Functions for the title page
  * @version 0.2
@@ -11,8 +11,8 @@
 #ifndef TITLE_H_INCLUDED
 #define TITLE_H_INCLUDED
 
-#include "check.h"
-#include "mouse.h"
+#include "check.hpp"
+#include "mouse.hpp"
 
 State title(SDL_Renderer *pRenderer, TTF_Font *pFont, int &puzzleSize);
 

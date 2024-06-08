@@ -1,4 +1,4 @@
-#include "board.h"
+#include "board.hpp"
 
 bool resolved(int map[], int puzzleSize)
 {

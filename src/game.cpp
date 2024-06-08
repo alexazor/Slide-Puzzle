@@ -1,4 +1,4 @@
-#include "game.h"
+#include "game.hpp"
 
 State game(SDL_Renderer *pRenderer, TTF_Font *pFont, int puzzleSize, int block_width, int block_height, int window_width, int window_height)
 {

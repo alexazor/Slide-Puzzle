@@ -1,4 +1,4 @@
-#include "title.h"
+#include "title.hpp"
 
 State title(SDL_Renderer *pRenderer, TTF_Font *pFont, int &puzzleSize)
 {

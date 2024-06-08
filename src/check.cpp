@@ -1,4 +1,4 @@
-#include "check.h"
+#include "check.hpp"
 
 void error_message()
 {
@@ -79,7 +79,7 @@ int create_text_texture(SDL_Texture *pTextTexture, char *text, SDL_Colour fgColo
 {
     SDL_Surface *pTextSurface = TTF_RenderText_Shaded(slidePuzzle.pFont, text, fgColour, bgColour);
 
-    if (pTextSurface == nullptr || surface_to_texture(pTextTexture, pTextSurface, slidePuzzle))
+    if (pTextSurface == nullptr || surface_to_texture(pTextTexture, pTextSurface, slidePuzzle) < 0)
     {
         error_message();
         return -1;
@@ -100,7 +100,7 @@ int create_img_texture(SDL_Texture *pImgTexture, char *imgPath, Slide_Puzzle &sl
     return 0;
 }
 
-int surface_to_texture(SDL_Texture *&pTexture, SDL_Surface *pSurface, Slide_Puzzle &slidePuzzle)
+int surface_to_texture(SDL_Texture *pTexture, SDL_Surface *pSurface, Slide_Puzzle &slidePuzzle)
 {
     pTexture = SDL_CreateTextureFromSurface(slidePuzzle.pRenderer, pSurface);
     SDL_FreeSurface(pSurface);

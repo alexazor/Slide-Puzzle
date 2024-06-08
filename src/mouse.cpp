@@ -1,4 +1,4 @@
-#include "mouse.h"
+#include "mouse.hpp"
 
 bool is_in_segement(int a, int l, int x)
 {
