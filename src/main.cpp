@@ -1,59 +1,52 @@
-#include <cstdlib>
 #include "main.hpp"
 #include "check.hpp"
 #include "title.hpp"
-#include "game.hpp"
+// #include "game.hpp"
 
 int main(int argc, char *argv[])
 {
     srand(time(NULL));
 
-    SDL_Window *pWindow = nullptr;
-    SDL_Renderer *pRenderer = nullptr;
-    TTF_Font *pFont = nullptr;
+    Application application;
 
-    int puzzleSize = 0;
-    int block_width, block_height, window_height, window_width;
-
-    State state = STATE_TITLE;
-
-    if (init_program(pWindow, pRenderer, pFont) < 0)
+    if (init_program(application) < 0)
         return EXIT_FAILURE;
 
     while (true)
     {
-        switch (state)
+        switch (application.state)
         {
         case STATE_TITLE:
-            SDL_SetWindowSize(pWindow, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
-            state = title(pRenderer, pFont, puzzleSize);
+            Title_Screen::main(&application);
             break;
 
         case STATE_GAME:
-            resize_window_board(pWindow, puzzleSize, block_width, block_height, window_width, window_height);
-            state = game(pRenderer, pFont, puzzleSize, block_width, block_height, window_width, window_height);
+            SDL_Log("Oops! -Game- tot implemented yet!");
+            close_program(application);
+            return EXIT_SUCCESS;
+            /*resize_window_board(pWindow, puzzleSize, block_width, block_height, window_width, window_height);
+            state = game(pRenderer, pFont, puzzleSize, block_width, block_height, window_width, window_height);*/
             break;
 
         case STATE_DEMO:
-            SDL_Log("DEMO\n-->%d", puzzleSize);
-            SDL_Log("Error! Non implemented yet!");
-            close_program(pWindow, pRenderer, pFont);
+            SDL_Log("Oops! -Demo- not implemented yet!");
+            close_program(application);
             return EXIT_SUCCESS;
             break;
 
         case STATE_QUIT:
-            close_program(pWindow, pRenderer, pFont);
+            close_program(application);
             return EXIT_SUCCESS;
             break;
 
         case STATE_ERROR:
-            close_program(pWindow, pRenderer, pFont);
+            close_program(application);
             return EXIT_FAILURE;
             break;
 
         default:
             SDL_Log("Unknown state!");
-            close_program(pWindow, pRenderer, pFont);
+            close_program(application);
             return EXIT_FAILURE;
             break;
         }

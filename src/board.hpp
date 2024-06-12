@@ -12,8 +12,22 @@
 
 #include "main.hpp"
 #include "check.hpp"
+#include <vector>
 
-#define SEP_SIZE 2
+class Board
+{
+public:
+    std::vector<SDL_Texture *> pNumbersTextures;
+    std::vector<SDL_Rect> numbersRects;
+    unsigned int blockWidth;
+    unsigned int blockHeight;
+    std::vector<int> map;
+    unsigned int puzzleSize;
+    unsigned int iVoid;
+    unsigned int jVoid;
+
+    Board(int sizeOfPuzzle) { puzzleSize = sizeOfPuzzle; }
+};
 
 enum Block_direction
 {
@@ -28,6 +42,8 @@ bool resolved(int map[], int puzzleSize);
 void resize_window_board(SDL_Window *pWindow, int puzzleSize, int &block_width, int &block_height, int &window_width, int &window_height);
 
 void move_block(int map[], int puzzleSize, int &iVoid, int &jVoid, int dir, SDL_Rect numbersRect[], int block_width, int block_height);
+
+void move_line(int map[], int puzzleSize, int iClick, int jClick, int &iVoid, int &jVoid, SDL_Rect numbersRect[], int block_width, int block_height);
 
 void shuffle_board(int map[], int puzzleSize, SDL_Rect numbersRect[], int block_width, int block_height);
 

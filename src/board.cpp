@@ -81,6 +81,34 @@ void move_block(int map[], int puzzleSize, int &iVoid, int &jVoid, int dir, SDL_
   }
 }
 
+void move_line(int map[], int puzzleSize, int iClick, int jClick, int &iVoid, int &jVoid, SDL_Rect numbersRect[], int block_width, int block_height)
+{
+  int dir = -1;
+  bool validMove = false;
+
+  if (iVoid == iClick)
+  {
+    if (jVoid < jClick)
+      dir = BLOCK_LEFT;
+    else
+      dir = BLOCK_RIGHT;
+
+    validMove = true;
+  }
+  if (jVoid == jClick)
+  {
+    if (iVoid < iClick)
+      dir = BLOCK_UP;
+    else
+      dir = BLOCK_DOWN;
+
+    validMove = true;
+  }
+
+  while (validMove && (iVoid != iClick || jVoid != jClick))
+    move_block(map, puzzleSize, iVoid, jVoid, dir, numbersRect, block_width, block_height);
+}
+
 void shuffle_board(int map[], int puzzleSize, SDL_Rect numbersRect[], int block_width, int block_height)
 {
   const int NUMBER_OF_BLOCS = puzzleSize * puzzleSize;

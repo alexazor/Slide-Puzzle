@@ -1,297 +1,417 @@
 #include "title.hpp"
 
-State title(SDL_Renderer *pRenderer, TTF_Font *pFont, int &puzzleSize)
+void Title_Screen::main(Application *pApp)
 {
-    SDL_Texture *pTextTextures[TITLE_TEXT_NBR_OF_ELEMENTS] = {nullptr};
-    SDL_Texture *pPuzzleSizesTextures[PUZZLE_SIZES] = {nullptr};
-    SDL_Texture *pImgSDLTexture = nullptr;
+    Title_Screen titleScreen(pApp);
 
-    SDL_Rect textRects[TITLE_TEXT_NBR_OF_ELEMENTS];
-    SDL_Rect puzzleSizesRects[PUZZLE_SIZES];
-    SDL_Rect imgSDLRect;
+    titleScreen.set_window_size();
 
-    if (create_textures_title(pRenderer, pFont, pTextTextures, pPuzzleSizesTextures, pImgSDLTexture) < 0)
-        return STATE_ERROR;
-
-    if (create_rectangles_title(pTextTextures, pPuzzleSizesTextures, pImgSDLTexture,
-                                textRects, puzzleSizesRects, imgSDLRect) < 0)
+    if (titleScreen.create_textures() < 0)
     {
-        destroy_textures_title(pTextTextures, pPuzzleSizesTextures, pImgSDLTexture);
-        return STATE_ERROR;
+        pApp->state = Program_State::STATE_ERROR;
+        return;
     }
 
-    SDL_SetRenderDrawBlendMode(pRenderer, SDL_BLENDMODE_BLEND);
+    if (titleScreen.create_rectangles() < 0)
+    {
+        titleScreen.destroy_textures();
+        pApp->state = Program_State::STATE_ERROR;
+        return;
+    }
 
-    return event_loop_title(pRenderer,
-                            pTextTextures, pPuzzleSizesTextures, pImgSDLTexture,
-                            textRects, puzzleSizesRects, imgSDLRect, puzzleSize);
+    titleScreen.resize_image();
+    titleScreen.set_positions();
+
+    SDL_SetRenderDrawBlendMode(titleScreen.pApp->pRenderer, SDL_BLENDMODE_BLEND);
+
+    if (titleScreen.update_screen(Program_State::STATE_GAME, -1) < 0)
+    {
+        pApp->state = Program_State::STATE_ERROR;
+        titleScreen.destroy_textures();
+        return;
+    }
+
+    titleScreen.event_loop();
 }
 
-int create_textures_title(SDL_Renderer *&pRenderer,
-                          TTF_Font *pFont,
-                          SDL_Texture *pTextTextures[],
-                          SDL_Texture *pPuzzleSizesTextures[],
-                          SDL_Texture *&pImgSDLTexture)
+void Title_Screen::set_window_size()
 {
-    SDL_Colour fgColour = SDL_Colour{255, 255, 255, 255};
-    SDL_Colour bgColour = SDL_Colour{0, 0, 0, 255};
+    SDL_SetWindowSize(this->pApp->pWindow, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
+}
 
+int Title_Screen::create_textures()
+{
+    SDL_Colour foregroundColour = SDL_Colour{255, 255, 255, 255};
+    SDL_Colour backgroundColour = SDL_Colour{0, 0, 0, 255};
+
+    if (this->create_text_textures(foregroundColour, backgroundColour) < 0)
+        return -1;
+
+    if (this->create_puzzle_sizes_textures(foregroundColour, backgroundColour) < 0)
+        return -1;
+
+    if (this->create_image_texture() < 0)
+        return -1;
+
+    return 0;
+}
+
+int Title_Screen::create_text_textures(SDL_Colour foregroundColour, SDL_Colour backgroundColour)
+{
     char textTitle[] = {"======Slide Puzzle======"};
     char textInstruction[] = {"Select the mode and choose the size"};
     char textMode[] = {"Click to change:"};
     char textGame[] = {"Game"};
     char textDemo[] = {"Demo"};
-    char textPressP[] = {"P: Highlight the first misplaced block"};
+    //    char textPressP[] = {"P: Highlight the first misplaced block"};
+
     char *textsArray[] = {textTitle,
                           textInstruction,
                           textMode,
                           textGame,
-                          textDemo,
-                          textPressP};
+                          textDemo}; /*,
+                           textPressP};*/
 
-    char imgPath[] = {IMG_PATH};
-
-    int puzzleSizeInt, i, j;
-    char puzzleSizeChar[10];
+    int i, j;
 
     for (i = 0; i < TITLE_TEXT_NBR_OF_ELEMENTS; i++)
     {
-        if (create_text_texture(pTextTextures[i], pFont, textsArray[i], fgColour, bgColour, pRenderer) < 0)
+        if (CHECK::create_text_texture(this->pTextTextures[i], textsArray[i], foregroundColour, backgroundColour, *this->pApp) < 0)
         {
-            for (j = 0; j < i; j++)
-                SDL_DestroyTexture(pTextTextures[j]);
-            error_message();
+            this->destroy_text_textures(i);
             return -1;
         }
     }
+
+    return 0;
+}
+
+int Title_Screen::create_puzzle_sizes_textures(SDL_Colour foregroundColour, SDL_Colour backgroundColour)
+{
+    int puzzleSizeInt, i, j;
+    char puzzleSizeCharArray[MAX_NUMBER_OF_DIGITS + 1];
 
     for (i = 0; i < PUZZLE_SIZES; i++)
     {
         puzzleSizeInt = i + PUZZLE_SIZE_MIN;
-        std::sprintf(puzzleSizeChar, "%d", i + PUZZLE_SIZE_MIN);
+        std::sprintf(puzzleSizeCharArray, "%d", i + PUZZLE_SIZE_MIN);
 
-        if (create_text_texture(pPuzzleSizesTextures[i], pFont, puzzleSizeChar, fgColour, bgColour, pRenderer) < 0)
+        if (CHECK::create_text_texture(this->pPuzzleSizesTextures[i], puzzleSizeCharArray, foregroundColour, backgroundColour, *this->pApp) < 0)
         {
-            for (j = 0; j < TITLE_TEXT_NBR_OF_ELEMENTS; j++)
-                SDL_DestroyTexture(pTextTextures[j]);
+            this->destroy_text_textures(TITLE_TEXT_NBR_OF_ELEMENTS);
 
-            for (j = 0; j < i; j++)
-                SDL_DestroyTexture(pPuzzleSizesTextures[j]);
+            this->destroy_puzzle_sizes_textures(i);
 
-            error_message();
             return -1;
         }
     }
 
-    if (create_img_texture(pImgSDLTexture, imgPath, pRenderer) < 0)
+    return 0;
+}
+
+int Title_Screen::create_image_texture()
+{
+    char imgPath[] = {IMG_PATH};
+    int j;
+
+    if (CHECK::create_img_texture(this->pImgSDLTexture, imgPath, *this->pApp) < 0)
     {
-        for (j = 0; j < TITLE_TEXT_NBR_OF_ELEMENTS; j++)
-            SDL_DestroyTexture(pTextTextures[j]);
+        this->destroy_text_textures(TITLE_TEXT_NBR_OF_ELEMENTS);
 
-        for (j = 0; j <= PUZZLE_SIZE_MAX - PUZZLE_SIZE_MIN; j++)
-            SDL_DestroyTexture(pPuzzleSizesTextures[j]);
+        this->destroy_puzzle_sizes_textures(PUZZLE_SIZES);
 
-        error_message();
         return -1;
     }
 
     return 0;
 }
 
-int create_rectangles_title(SDL_Texture *pTextTextures[],
-                            SDL_Texture *pPuzzleSizesTextures[],
-                            SDL_Texture *&pImgSDLTexture,
-                            SDL_Rect textRects[],
-                            SDL_Rect puzzleSizesRects[],
-                            SDL_Rect &imgSDLRect)
+int Title_Screen::create_rectangles()
 {
-    int i, space_width_puzzle_sizes, space_width_modes, textHeight;
+    if (create_text_rectangles() < 0)
+        return -1;
 
-    // Creation of the SDL_Rects
-    //---Creation of the SDL_Rects for the text textures
-    for (i = 0; i < TITLE_TEXT_NBR_OF_ELEMENTS; i++)
-        if (SDL_QueryTexture(pTextTextures[i], nullptr, nullptr, &textRects[i].w, &textRects[i].h) < 0)
-            RETURN_ERR
+    if (create_puzzle_sizes_rectangles() < 0)
+        return -1;
 
-    //---Creation of the SDL_Rects for the puzzle size textures
-    for (i = 0; i <= PUZZLE_SIZE_MAX - PUZZLE_SIZE_MIN; i++)
-        if (SDL_QueryTexture(pPuzzleSizesTextures[i], nullptr, nullptr, &puzzleSizesRects[i].w, &puzzleSizesRects[i].h) < 0)
-            RETURN_ERR
-
-    //---Creation of the SDL_Rects for the SDL image textures
-    if (SDL_QueryTexture(pImgSDLTexture, nullptr, nullptr, &imgSDLRect.w, &imgSDLRect.h) < 0)
-        RETURN_ERR
-
-    // Resize image
-    imgSDLRect.w = (3 * imgSDLRect.w) / 4;
-    imgSDLRect.h = (3 * imgSDLRect.h) / 4;
-
-    // Positions of the SDL_Rect
-    //---Positions for the text textures
-    space_width_modes = textRects[TITLE_GAME].w / 2;
-    textHeight = textRects[TITLE_TITLE].h;
-
-    textRects[TITLE_TITLE].x = (DEFAULT_WINDOW_WIDTH - textRects[TITLE_TITLE].w) / 2;
-    textRects[TITLE_TITLE].y = 0;
-
-    textRects[TITLE_INSTRUCTION].x = (DEFAULT_WINDOW_WIDTH - textRects[TITLE_INSTRUCTION].w) / 2;
-    textRects[TITLE_INSTRUCTION].y = 1.5 * textHeight;
-
-    textRects[TITLE_MODE].x = (DEFAULT_WINDOW_WIDTH - textRects[TITLE_MODE].w - textRects[TITLE_GAME].w - textRects[TITLE_DEMO].w) / 2 - space_width_modes;
-    textRects[TITLE_MODE].y = 3 * textHeight;
-
-    textRects[TITLE_GAME].x = (DEFAULT_WINDOW_WIDTH + textRects[TITLE_MODE].w - textRects[TITLE_GAME].w - textRects[TITLE_DEMO].w) / 2;
-    textRects[TITLE_GAME].y = 3 * textHeight;
-
-    textRects[TITLE_DEMO].x = (DEFAULT_WINDOW_WIDTH + textRects[TITLE_MODE].w + textRects[TITLE_GAME].w - textRects[TITLE_DEMO].w) / 2 + space_width_modes;
-    textRects[TITLE_DEMO].y = 3 * textHeight;
-
-    textRects[TITLE_PRESS_P].x = (DEFAULT_WINDOW_WIDTH - textRects[TITLE_PRESS_P].w) / 2;
-    textRects[TITLE_PRESS_P].y = DEFAULT_WINDOW_HEIGHT - 2 * textHeight;
-
-    //---Position for the puzzle size textures
-    space_width_puzzle_sizes = DEFAULT_WINDOW_WIDTH / (1 + PUZZLE_SIZES) - puzzleSizesRects[0].w;
-    for (i = 0; i < PUZZLE_SIZES; i++)
-    {
-        puzzleSizesRects[i].x = space_width_puzzle_sizes + i * (puzzleSizesRects[0].w + space_width_puzzle_sizes);
-        puzzleSizesRects[i].y = (DEFAULT_WINDOW_HEIGHT + imgSDLRect.h) / 2 + 0.5 * puzzleSizesRects[i].h;
-    }
-
-    //---Position of the image
-    imgSDLRect.x = (DEFAULT_WINDOW_WIDTH - imgSDLRect.w) / 2;
-    imgSDLRect.y = (DEFAULT_WINDOW_HEIGHT - imgSDLRect.h) / 2;
+    if (create_image_rectangle() < 0)
+        return -1;
 
     return 0;
 }
 
-State event_loop_title(SDL_Renderer *pRenderer,
-                       SDL_Texture *pTextTextures[],
-                       SDL_Texture *pPuzzleSizesTextures[],
-                       SDL_Texture *&pImgSDLTexture,
-                       SDL_Rect textRects[],
-                       SDL_Rect puzzleSizesRects[],
-                       SDL_Rect &imgSDLRect,
-                       int &puzzleSize)
+int Title_Screen::create_text_rectangles()
 {
-    int selectedSizeIndex, sizeIndex;
+    for (int i = 0; i < TITLE_TEXT_NBR_OF_ELEMENTS; i++)
+        if (CHECK::create_rect(this->pTextTextures[i], &this->textRects[i]) < 0)
+            return -1;
+
+    return 0;
+}
+
+int Title_Screen::create_puzzle_sizes_rectangles()
+{
+    for (int i = 0; i < PUZZLE_SIZES; i++)
+        if (CHECK::create_rect(pPuzzleSizesTextures[i], &this->puzzleSizesRects[i]) < 0)
+            return -1;
+
+    return 0;
+}
+
+int Title_Screen::create_image_rectangle()
+{
+    if (CHECK::create_rect(pImgSDLTexture, &this->imgSDLRect) < 0)
+        return -1;
+
+    return 0;
+}
+
+void Title_Screen::resize_image()
+{
+    this->imgSDLRect.w = (3 * this->imgSDLRect.w) / 4;
+    this->imgSDLRect.h = (3 * this->imgSDLRect.h) / 4;
+}
+
+void Title_Screen::set_positions()
+{
+    this->set_text_positions();
+    this->set_puzzle_sizes_positions();
+    this->set_image_positions();
+}
+
+void Title_Screen::set_text_positions()
+{
+    int space_width_modes = this->textRects[TITLE_GAME].w / 2;
+    int textHeight = this->textRects[TITLE_TITLE].h;
+
+    this->textRects[TITLE_TITLE].x = (DEFAULT_WINDOW_WIDTH - this->textRects[TITLE_TITLE].w) / 2;
+    this->textRects[TITLE_TITLE].y = 0;
+
+    this->textRects[TITLE_INSTRUCTION].x = (DEFAULT_WINDOW_WIDTH - this->textRects[TITLE_INSTRUCTION].w) / 2;
+    this->textRects[TITLE_INSTRUCTION].y = 1.5 * textHeight;
+
+    this->textRects[TITLE_MODE].x = (DEFAULT_WINDOW_WIDTH - this->textRects[TITLE_MODE].w - this->textRects[TITLE_GAME].w - this->textRects[TITLE_DEMO].w) / 2 - space_width_modes;
+    this->textRects[TITLE_MODE].y = 3 * textHeight;
+
+    this->textRects[TITLE_GAME].x = (DEFAULT_WINDOW_WIDTH + this->textRects[TITLE_MODE].w - this->textRects[TITLE_GAME].w - this->textRects[TITLE_DEMO].w) / 2;
+    this->textRects[TITLE_GAME].y = 3 * textHeight;
+
+    this->textRects[TITLE_DEMO].x = (DEFAULT_WINDOW_WIDTH + this->textRects[TITLE_MODE].w + this->textRects[TITLE_GAME].w - this->textRects[TITLE_DEMO].w) / 2 + space_width_modes;
+    this->textRects[TITLE_DEMO].y = 3 * textHeight;
+
+    /*this->textRects[TITLE_PRESS_P].x = (DEFAULT_WINDOW_WIDTH - this->textRects[TITLE_PRESS_P].w) / 2;
+    this->textRects[TITLE_PRESS_P].y = DEFAULT_WINDOW_HEIGHT - 2 * textHeight;*/
+}
+
+void Title_Screen::set_puzzle_sizes_positions()
+{
+    int space_width_puzzle_sizes = DEFAULT_WINDOW_WIDTH / (1 + PUZZLE_SIZES) - this->puzzleSizesRects[0].w;
+
+    for (int i = 0; i < PUZZLE_SIZES; i++)
+    {
+        this->puzzleSizesRects[i].x = space_width_puzzle_sizes + i * (this->puzzleSizesRects[0].w + space_width_puzzle_sizes);
+        this->puzzleSizesRects[i].y = (DEFAULT_WINDOW_HEIGHT + imgSDLRect.h + this->puzzleSizesRects[i].h) / 2;
+    }
+}
+
+void Title_Screen::set_image_positions()
+{
+    this->imgSDLRect.x = (DEFAULT_WINDOW_WIDTH - this->imgSDLRect.w) / 2;
+    this->imgSDLRect.y = (DEFAULT_WINDOW_HEIGHT - this->imgSDLRect.h) / 2;
+}
+
+void Title_Screen::event_loop()
+{
+    int selectedSizeIndex = -1;
 
     SDL_Event events;
-    State state = STATE_TITLE;
-    State futureState = STATE_GAME;
+    Program_State futureState = Program_State::STATE_GAME;
 
-    int size;
-
-    while (state == STATE_TITLE)
+    while (this->pApp->state == Program_State::STATE_TITLE)
     {
-        while (SDL_PollEvent(&events))
+        this->handle_events(&events, &selectedSizeIndex, &futureState);
+
+        if (this->update_screen(futureState, selectedSizeIndex) < 0)
         {
-            switch (events.type)
-            {
-            case SDL_QUIT:
-                state = STATE_QUIT;
-                break;
-
-            case SDL_MOUSEBUTTONDOWN:
-                if (events.button.button == SDL_BUTTON_LEFT)
-                {
-                    if (mouse_over_rectangle(textRects[TITLE_DEMO], events.button.x, events.button.y))
-                        futureState = STATE_DEMO;
-                    if (mouse_over_rectangle(textRects[TITLE_GAME], events.button.x, events.button.y))
-                        futureState = STATE_GAME;
-
-                    for (size = 0; size < PUZZLE_SIZES; size++)
-                        if (mouse_over_rectangle(puzzleSizesRects[size], events.button.x, events.button.y))
-                        {
-                            state = futureState;
-                            puzzleSize = size + PUZZLE_SIZE_MIN;
-                        }
-                }
-                break;
-
-            case SDL_MOUSEMOTION:
-                selectedSizeIndex = -1;
-                for (sizeIndex = 0; sizeIndex < PUZZLE_SIZES; sizeIndex++)
-                    if (mouse_over_rectangle(puzzleSizesRects[sizeIndex], events.motion.x, events.motion.y))
-                        selectedSizeIndex = sizeIndex;
-                break;
-
-            default:
-                break;
-            }
+            this->pApp->state = Program_State::STATE_ERROR;
+            this->destroy_textures();
+            return;
         }
 
-        if (update_screen_title(pRenderer,
-                                pTextTextures, pPuzzleSizesTextures, pImgSDLTexture,
-                                textRects, puzzleSizesRects, imgSDLRect,
-                                futureState, selectedSizeIndex) < 0)
-            state = STATE_ERROR;
+        SDL_Delay(PAUSE);
     }
 
-    destroy_textures_title(pTextTextures, pPuzzleSizesTextures, pImgSDLTexture);
-    return state;
+    this->destroy_textures();
 }
 
-int update_screen_title(SDL_Renderer *pRenderer,
-                        SDL_Texture *pTextTextures[],
-                        SDL_Texture *pPuzzleSizesTextures[],
-                        SDL_Texture *pImgSDLTexture,
-                        SDL_Rect textRects[],
-                        SDL_Rect puzzleSizesRects[],
-                        SDL_Rect imgSDLRect,
-                        State futureState,
-                        int selectedSizeIndex)
+void Title_Screen::handle_events(SDL_Event *pEvents, int *pSelectedSizeIndex, Program_State *pFutureState)
 {
-    int i;
-
-    if (SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255) < 0 || SDL_RenderClear(pRenderer) < 0)
-        RETURN_ERR
-
-    for (i = 0; i < TITLE_TEXT_NBR_OF_ELEMENTS; i++)
-        if (SDL_RenderCopy(pRenderer, pTextTextures[i], nullptr, &textRects[i]) < 0)
-            RETURN_ERR
-
-    for (i = 0; i < PUZZLE_SIZES; i++)
+    while (SDL_WaitEvent(pEvents))
     {
-        if (SDL_RenderCopy(pRenderer, pPuzzleSizesTextures[i], nullptr, &puzzleSizesRects[i]) < 0)
-            RETURN_ERR
+        switch (pEvents->type)
+        {
+        case SDL_QUIT:
+            this->pApp->state = Program_State::STATE_QUIT;
+            return;
+            break;
 
-        if (i == selectedSizeIndex)
-            if (SDL_SetRenderDrawColor(pRenderer, 0, 255, 0, 127) < 0 || SDL_RenderFillRect(pRenderer, &puzzleSizesRects[i]) < 0)
-                RETURN_ERR
+        case SDL_MOUSEBUTTONDOWN:
+            if (pEvents->button.button == SDL_BUTTON_LEFT)
+                this->event_left_click(pEvents->button.x, pEvents->button.y, pFutureState);
+            return;
+            break;
+
+        case SDL_MOUSEMOTION:
+            this->event_mouse_motion(pEvents->motion.x, pEvents->motion.y, pSelectedSizeIndex);
+            return;
+            break;
+
+        default:
+            break;
+        }
+    }
+}
+
+void Title_Screen::event_left_click(Sint32 mouseX, Sint32 mouseY, Program_State *pFutureState)
+{
+    if (MOUSE::is_over_rectangle(this->textRects[TITLE_DEMO], mouseX, mouseY))
+    {
+        *pFutureState = Program_State::STATE_DEMO;
+        return;
     }
 
-    if (SDL_RenderCopy(pRenderer, pImgSDLTexture, nullptr, &imgSDLRect) < 0)
-        RETURN_ERR
-
-    if (futureState == STATE_GAME)
+    if (MOUSE::is_over_rectangle(this->textRects[TITLE_GAME], mouseX, mouseY))
     {
-        if (SDL_SetRenderDrawColor(pRenderer, 0, 0, 255, 127) < 0 || SDL_RenderFillRect(pRenderer, &textRects[TITLE_GAME]) < 0)
-            RETURN_ERR
+        *pFutureState = Program_State::STATE_GAME;
+        return;
     }
 
-    else
-    {
-        if (SDL_SetRenderDrawColor(pRenderer, 0, 0, 255, 127) < 0 || SDL_RenderFillRect(pRenderer, &textRects[TITLE_DEMO]) < 0)
-            RETURN_ERR
-    }
+    for (int sizeIndex = 0; sizeIndex < PUZZLE_SIZES; sizeIndex++)
+        if (MOUSE::is_over_rectangle(this->puzzleSizesRects[sizeIndex], mouseX, mouseY))
+        {
+            this->pApp->puzzleSize = sizeIndex + PUZZLE_SIZE_MIN;
+            this->pApp->state = *pFutureState;
+            return;
+        }
+}
 
-    SDL_RenderPresent(pRenderer);
+void Title_Screen::event_mouse_motion(Sint32 mouseX, Sint32 mouseY, int *pSelectedSizeIndex)
+{
+    *pSelectedSizeIndex = NO_SELECTED_SIZE;
+
+    for (int sizeIndex = 0; sizeIndex < PUZZLE_SIZES; sizeIndex++)
+        if (MOUSE::is_over_rectangle(puzzleSizesRects[sizeIndex], mouseX, mouseY))
+        {
+            *pSelectedSizeIndex = sizeIndex;
+            return;
+        }
+}
+
+int Title_Screen::update_screen(const Program_State futureState, int selectedSizeIndex)
+{
+
+    if (CHECK::colour_background_black(*this->pApp) < 0)
+        return -1;
+
+    if (this->render_text_textures() < 0)
+        return -1;
+
+    if (this->render_puzzle_sizes_textures() < 0)
+        return -1;
+
+    if (this->render_image_texture() < 0)
+        return -1;
+
+    if (this->render_selected_size_rectangle(selectedSizeIndex) < 0)
+        return -1;
+
+    if (this->render_future_state_rectangle(futureState) < 0)
+        return -1;
+
+    SDL_RenderPresent(this->pApp->pRenderer);
+
     return 0;
 }
 
-void destroy_textures_title(SDL_Texture *pTextTextures[],
-                            SDL_Texture *pPuzzleSizesTextures[],
-                            SDL_Texture *pImgSDLTexture)
+int Title_Screen::render_text_textures()
 {
-    int j;
+    for (int i = 0; i < TITLE_TEXT_NBR_OF_ELEMENTS; i++)
+        if (CHECK::render_texture(this->pTextTextures[i], &this->textRects[i], *this->pApp) < 0)
+            return -1;
 
-    SDL_DestroyTexture(pImgSDLTexture);
-
-    for (j = 0; j < TITLE_TEXT_NBR_OF_ELEMENTS; j++)
-        SDL_DestroyTexture(pTextTextures[j]);
-
-    for (j = 0; j < PUZZLE_SIZES; j++)
-        SDL_DestroyTexture(pPuzzleSizesTextures[j]);
+    return 0;
 }
 
-// for( SDL_Texture: pTextTextures)
+int Title_Screen::render_puzzle_sizes_textures()
+{
+    for (int i = 0; i < PUZZLE_SIZES; i++)
+        if (CHECK::render_texture(this->pPuzzleSizesTextures[i], &this->puzzleSizesRects[i], *this->pApp) < 0)
+            return -1;
+
+    return 0;
+}
+
+int Title_Screen::render_image_texture()
+{
+    if (CHECK::render_texture(this->pImgSDLTexture, &this->imgSDLRect, *this->pApp) < 0)
+        return -1;
+
+    return 0;
+}
+
+int Title_Screen::render_selected_size_rectangle(const int selectedSizeIndex)
+{
+    if (selectedSizeIndex == NO_SELECTED_SIZE)
+        return 0;
+
+    if (CHECK::render_transparent_green_rectangle(&this->puzzleSizesRects[selectedSizeIndex], *this->pApp) < 0)
+        return -1;
+    return 0;
+}
+
+int Title_Screen::render_future_state_rectangle(const int futureState)
+{
+    Title_Text textToHighlight;
+
+    switch (futureState)
+    {
+    case Program_State::STATE_GAME:
+        textToHighlight = Title_Text::TITLE_GAME;
+        break;
+
+    case Program_State::STATE_DEMO:
+        textToHighlight = Title_Text::TITLE_DEMO;
+        break;
+
+    default:
+        std::cout << "-futureState- variable does not have an acceptable value: " << futureState << std::endl;
+        return -1;
+        break;
+    }
+
+    if (CHECK::render_transparent_green_rectangle(&this->textRects[textToHighlight], *this->pApp) < 0)
+        return -1;
+
+    return 0;
+}
+
+void Title_Screen::destroy_textures()
+{
+    SDL_DestroyTexture(this->pImgSDLTexture);
+
+    destroy_text_textures(TITLE_TEXT_NBR_OF_ELEMENTS);
+
+    destroy_puzzle_sizes_textures(PUZZLE_SIZES);
+}
+
+void Title_Screen::destroy_text_textures(int maxIndex)
+{
+    for (int j = 0; j < maxIndex; j++)
+        SDL_DestroyTexture(this->pTextTextures[j]);
+}
+
+void Title_Screen::destroy_puzzle_sizes_textures(int maxIndex)
+{
+    for (int j = 0; j < maxIndex; j++)
+        SDL_DestroyTexture(this->pPuzzleSizesTextures[j]);
+};

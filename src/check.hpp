@@ -16,19 +16,39 @@
 #include <iostream>
 #include <fstream>
 #include "main.hpp"
-#include "slide_puzzle.hpp"
+#include "application.hpp"
 
 void error_message(); // Logs the error message from SDL
 
 int init_SDL();
 int init_TTF();
-int create_window(Slide_Puzzle &slidePuzzle);
-int init_program(Slide_Puzzle &slidePuzzle);
+int create_window(Application &application);
+int init_program(Application &application);
 
-void close_program(Slide_Puzzle &slidePuzzle);
+void close_program(Application &application);
 
-int create_text_texture(SDL_Texture *&pTextTexture, char *text, SDL_Colour fgColour, SDL_Colour bgColour, Slide_Puzzle &slidePuzzle);
-int create_img_texture(SDL_Texture *&pImgTexture, char *imgPath, Slide_Puzzle &slidePuzzle);
-int surface_to_texture(SDL_Texture *pTexture, SDL_Surface *pSurface, Slide_Puzzle &slidePuzzle);
+namespace CHECK
+{
+    int create_text_texture(SDL_Texture *&pTextTexture, char *text, SDL_Colour fgColour, SDL_Colour bgColour, Application &application);
+
+    int create_img_texture(SDL_Texture *&pImgTexture, char *imgPath, Application &application);
+
+    int surface_to_texture(SDL_Texture *&pTexture, SDL_Surface *pSurface, Application &application);
+
+    int create_rect(SDL_Texture *pTexture, SDL_Rect *pRect);
+
+    int colour_background(Uint8 red, Uint8 green, Uint8 blue, Application &application);
+
+    int colour_background_black(Application &application);
+
+    int colour_background_white(Application &application);
+
+    int render_texture(SDL_Texture *pTexture, SDL_Rect *pRect, Application &application);
+
+    int render_transparent_rectangle(SDL_Rect *pRect, Uint8 red, Uint8 green, Uint8 blue, Application &application);
+
+    int render_transparent_green_rectangle(SDL_Rect *pRect, Application &application);
+
+} // namespace CHECK
 
 #endif // CHECK_H_INCLUDED

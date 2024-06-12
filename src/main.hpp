@@ -11,19 +11,23 @@
 #ifndef MAIN_H_INCLUDED
 #define MAIN_H_INCLUDED
 
+#include <cstdlib>
+#include <time.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
+
 #define DEFAULT_WINDOW_WIDTH 629
 #define DEFAULT_WINDOW_HEIGHT 629
-
-#define PUZZLE_SIZE_MIN 2
-#define PUZZLE_SIZE_MAX 10
-#define PUZZLE_SIZES PUZZLE_SIZE_MAX - PUZZLE_SIZE_MIN + 1
 
 #define FPS 20
 #define PAUSE 1000 / FPS
 
-#define IMG_PATH "../res/img/SDL_logo.png"
-#define FONT_PATH "../res/font/times.ttf"
+#define IMG_PATH "res/img/SDL_logo.png"
+#define FONT_PATH "res/font/times.ttf" // times
 #define FONT_SIZE 40
+
+#define SEP_SIZE 2
 
 enum Program_State
 {
