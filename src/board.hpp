@@ -55,6 +55,10 @@ public:
 
     void move_line(const int iClick, const int jClick);
 
+    bool move_block(Block_Direction dir);
+
+    static Block_Direction random_direction();
+
 private:
     int from_coordinates_to_index(const int i, const int j);
 
@@ -64,8 +68,6 @@ private:
 
     bool is_resolved();
 
-    bool move_block(Block_Direction dir);
-
     void move_block_set_differences(Block_Direction dir, int *iBlock, int *jBlock, int *xDifBlock, int *yDifBlock, int *iDifVoid, int *jDifVoid);
 
     void move_block_apply_differences(const int iBlock, const int jBlock, const int xDifBlock, const int yDifBlock, const int iDifVoid, const int jDifVoid);
@@ -73,8 +75,6 @@ private:
     bool move_line_is_valid_move(const int iClick, const int jClick);
 
     Block_Direction move_line_determine_direction(const int iClick, const int jClick);
-
-    Block_Direction random_direction();
 
     Block_Direction opposite_direction(const Block_Direction dir);
 

@@ -45,6 +45,8 @@ namespace CHECK
 
     int colour_background_white(Application &application);
 
+    int colour_background_red(Application &application);
+
     // RENDERING
     int render_texture(SDL_Texture *pTexture, SDL_Rect *pRect, Application &application);
 

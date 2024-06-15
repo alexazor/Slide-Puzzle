@@ -51,7 +51,7 @@ void Board::shuffle()
     for (int i = 0; i < NUMBER_OF_MOVES; i++)
     {
       numberOfSteps++;
-      direction = this->random_direction();
+      direction = Board::random_direction();
 
       if (direction != this->opposite_direction(direction))
       {

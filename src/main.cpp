@@ -2,6 +2,7 @@
 #include "check.hpp"
 #include "title.hpp"
 #include "game.hpp"
+#include "demo.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -25,9 +26,7 @@ int main(int argc, char *argv[])
             break;
 
         case STATE_DEMO:
-            SDL_Log("Oops! -Demo- not implemented yet!");
-            close_program(application);
-            return EXIT_SUCCESS;
+            Demo::main(&application);
             break;
 
         case STATE_QUIT:

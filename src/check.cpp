@@ -150,6 +150,11 @@ namespace CHECK
         return colour_background(255, 255, 255, application);
     }
 
+    int colour_background_red(Application &application)
+    {
+        return colour_background(255, 0, 0, application);
+    }
+
     // RENDERING
     int render_texture(SDL_Texture *pTexture, SDL_Rect *pRect, Application &application)
     {
