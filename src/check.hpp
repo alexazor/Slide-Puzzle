@@ -29,6 +29,7 @@ void close_program(Application &application);
 
 namespace CHECK
 {
+    // CREATION
     int create_text_texture(SDL_Texture *&pTextTexture, char *text, SDL_Colour fgColour, SDL_Colour bgColour, Application &application);
 
     int create_img_texture(SDL_Texture *&pImgTexture, char *imgPath, Application &application);
@@ -37,17 +38,25 @@ namespace CHECK
 
     int create_rect(SDL_Texture *pTexture, SDL_Rect *pRect);
 
+    // COLOURING
     int colour_background(Uint8 red, Uint8 green, Uint8 blue, Application &application);
 
     int colour_background_black(Application &application);
 
     int colour_background_white(Application &application);
 
+    // RENDERING
     int render_texture(SDL_Texture *pTexture, SDL_Rect *pRect, Application &application);
 
     int render_transparent_rectangle(SDL_Rect *pRect, Uint8 red, Uint8 green, Uint8 blue, Application &application);
 
     int render_transparent_green_rectangle(SDL_Rect *pRect, Application &application);
+
+    int render_transparent_blue_rectangle(SDL_Rect *pRect, Application &application);
+
+    int render_opaque_rectangle(SDL_Rect *pRect, Uint8 red, Uint8 green, Uint8 blue, Application &application);
+
+    int render_opaque_black_rectangle(SDL_Rect *pRect, Application &application);
 
 } // namespace CHECK
 

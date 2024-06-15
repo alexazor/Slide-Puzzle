@@ -1,80 +1,145 @@
 #include "game.hpp"
 
-State game(SDL_Renderer *pRenderer, TTF_Font *pFont, int puzzleSize, int block_width, int block_height, int window_width, int window_height)
+void Game::main(Application *pApp)
 {
-    State state = STATE_GAME;
+    Game game = Game(pApp);
 
-    const int NUMBER_OF_BLOCS = puzzleSize * puzzleSize;
+    game.set_window_size();
 
-    SDL_Texture *pNumbersTextures[NUMBER_OF_BLOCS];
-    SDL_Rect numbersRects[NUMBER_OF_BLOCS];
-
-    int map[NUMBER_OF_BLOCS];
-
-    if (create_textures_board(pRenderer, pFont, pNumbersTextures, puzzleSize) < 0)
-        return STATE_ERROR;
-
-    if (create_rectangles_board(pNumbersTextures, numbersRects, puzzleSize, block_width, block_height) < 0)
+    if (game.create_textures() < 0)
     {
-        destroy_textures_board(pNumbersTextures, puzzleSize);
-        return STATE_ERROR;
+        pApp->state = Program_State::STATE_ERROR;
+        return;
     }
 
-    shuffle_board(map, puzzleSize, numbersRects, block_width, block_height);
+    if (game.create_rectangles() < 0)
+    {
+        game.destroy_textures();
+        pApp->state = Program_State::STATE_ERROR;
+        return;
+    }
 
-    SDL_SetRenderDrawBlendMode(pRenderer, SDL_BLENDMODE_BLEND);
+    game.set_positions();
 
-    return event_loop_game(pRenderer, pNumbersTextures, numbersRects, puzzleSize, map, block_width, block_height, window_width, window_height);
+    game.board.shuffle();
+
+    SDL_SetRenderDrawBlendMode(game.pApp->pRenderer, SDL_BLENDMODE_BLEND);
+
+    if (game.update_screen() < 0)
+    {
+        pApp->state = Program_State::STATE_ERROR;
+        game.destroy_textures();
+        return;
+    }
+
+    game.event_loop();
 }
 
-State event_loop_game(SDL_Renderer *pRenderer,
-                      SDL_Texture *pNumbersTextures[],
-                      SDL_Rect numbersRects[],
-                      int puzzleSize,
-                      int map[],
-                      int block_width,
-                      int block_height,
-                      int window_width,
-                      int window_height)
+Game::Game(Application *pApplication)
+{
+    this->pApp = pApplication;
+    this->board = Board(pApplication->puzzleSize);
+}
+
+void Game::set_window_size()
+{
+    int window_width = this->pApp->puzzleSize * (this->board.blockWidth + SEP_SIZE);
+    int window_height = this->pApp->puzzleSize * (this->board.blockHeight + SEP_SIZE);
+
+    SDL_SetWindowSize(this->pApp->pWindow, window_width, window_height);
+}
+
+int Game::create_textures()
+{
+    return this->board.create_textures(*this->pApp);
+}
+
+int Game::create_rectangles()
+{
+    return this->board.create_rectangles();
+}
+
+void Game::set_positions()
+{
+    this->board.set_positions();
+}
+
+void Game::event_loop()
 {
     SDL_Event events;
-    State state = STATE_GAME;
 
-    const int NUMBER_OF_BLOCS = puzzleSize * puzzleSize;
-
-    SDL_Rect blockRect = SDL_Rect{0, 0, block_width, block_height};
-
-    int size, iClick, jClick, iVoid, jVoid;
-
-    find_void(map, puzzleSize, iVoid, jVoid);
-
-    while (state == STATE_GAME)
+    while (this->pApp->state == STATE_GAME)
     {
-        while (SDL_WaitEvent(&events))
+        this->handle_events(&events);
+
+        if (this->update_screen() < 0)
         {
-            switch (events.type)
-            {
-            case SDL_QUIT:
-                state = STATE_TITLE;
-                break;
+            this->pApp->state = STATE_ERROR;
+            this->destroy_textures();
 
-            case SDL_MOUSEBUTTONDOWN:
-                if (events.button.button == SDL_BUTTON_LEFT)
-                {
-                    get_block_position(events.button.x, events.button.y, block_height, block_width, iClick, jClick);
-                    move_line(map, puzzleSize, iClick, jClick, iVoid, jVoid, numbersRects, block_width, block_height);
-                }
-                break;
-
-            default:
-                break;
-            }
+            return;
         }
-
-        if (update_screen_board(pRenderer, pNumbersTextures, numbersRects, &blockRect, puzzleSize, map, block_width, block_height) < 0)
-            state = STATE_ERROR;
+        SDL_Delay(PAUSE);
     }
 
-    destroy_textures_board(pNumbersTextures, puzzleSize);
-    return state;
+    this->destroy_textures();
+}
+
+void Game::handle_events(SDL_Event *pEvents)
+{
+    while (SDL_WaitEvent(pEvents))
+    {
+        switch (pEvents->type)
+        {
+        case SDL_QUIT:
+            this->pApp->state = Program_State::STATE_QUIT;
+            return;
+            break;
+
+        case SDL_KEYDOWN:
+            if (pEvents->key.keysym.sym == SDLK_ESCAPE)
+            {
+                this->pApp->state = Program_State::STATE_TITLE;
+                return;
+            }
+            break;
+
+        case SDL_MOUSEBUTTONDOWN:
+            if (pEvents->button.button == SDL_BUTTON_LEFT)
+            {
+                event_left_click(pEvents->button.x, pEvents->button.y);
+                return;
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
+}
+
+void Game::event_left_click(Sint32 mouseX, Sint32 mouseY)
+{
+    int iClick, jClick;
+
+    MOUSE::get_block_coordinates(mouseX, mouseY, this->board.blockHeight, this->board.blockWidth, &iClick, &jClick);
+    this->board.move_line(iClick, jClick);
+}
+
+int Game::update_screen()
+{
+    if (CHECK::colour_background_white(*this->pApp) < 0)
+        return -1;
+
+    if (this->board.render_textures(*this->pApp) < 0)
+        return -1;
+
+    SDL_RenderPresent(this->pApp->pRenderer);
+
+    return 0;
+}
+
+void Game::destroy_textures()
+{
+    this->board.destroy_textures(this->board.NUMBER_OF_BLOCKS - 1);
 }

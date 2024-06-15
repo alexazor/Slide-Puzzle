@@ -1,9 +1,9 @@
 /**
 *@file board.hpp
 *@author Alexandre AZOR
-*@brief Functions like initialisation or
+*@brief Functions for block movements
 *@version 1.0
-* @date 2024-06-08
+* @date 2024-06-12
 
 */
 
@@ -14,22 +14,9 @@
 #include "check.hpp"
 #include <vector>
 
-class Board
-{
-public:
-    std::vector<SDL_Texture *> pNumbersTextures;
-    std::vector<SDL_Rect> numbersRects;
-    unsigned int blockWidth;
-    unsigned int blockHeight;
-    std::vector<int> map;
-    unsigned int puzzleSize;
-    unsigned int iVoid;
-    unsigned int jVoid;
+#define BOARD_MAX_NUMBER_OF_DIGITS 3
 
-    Board(int sizeOfPuzzle) { puzzleSize = sizeOfPuzzle; }
-};
-
-enum Block_direction
+enum Block_Direction
 {
     BLOCK_UP = 0,
     BLOCK_LEFT,
@@ -37,37 +24,64 @@ enum Block_direction
     BLOCK_RIGHT
 };
 
-bool resolved(int map[], int puzzleSize);
+class Board
+{
+public:
+    std::vector<SDL_Texture *> pNumbersTextures;
+    std::vector<SDL_Rect> numbersRects;
+    SDL_Rect blockRect;
+    int blockWidth;
+    int blockHeight;
+    std::vector<int> map;
+    int puzzleSize;
+    int iVoid;
+    int jVoid;
+    int NUMBER_OF_BLOCKS;
 
-void resize_window_board(SDL_Window *pWindow, int puzzleSize, int &block_width, int &block_height, int &window_width, int &window_height);
+    Board() {}
+    Board(int sizeOfPuzzle);
 
-void move_block(int map[], int puzzleSize, int &iVoid, int &jVoid, int dir, SDL_Rect numbersRect[], int block_width, int block_height);
+    void shuffle();
 
-void move_line(int map[], int puzzleSize, int iClick, int jClick, int &iVoid, int &jVoid, SDL_Rect numbersRect[], int block_width, int block_height);
+    int create_textures(Application &application);
 
-void shuffle_board(int map[], int puzzleSize, SDL_Rect numbersRect[], int block_width, int block_height);
+    int create_rectangles();
 
-void find_void(int map[], int puzzleSize, int &iVoid, int &jVoid);
+    void set_positions();
 
-int create_textures_board(SDL_Renderer *&pRenderer,
-                          TTF_Font *pFont,
-                          SDL_Texture *pNumbersTextures[],
-                          int puzzleSize);
+    int render_textures(Application &application);
 
-int create_rectangles_board(SDL_Texture *pNumbersTextures[],
-                            SDL_Rect numbersRects[],
-                            int puzzleSize,
-                            int block_width,
-                            int block_height);
+    void destroy_textures(int numberOfBlocksToDestroy);
 
-int update_screen_board(SDL_Renderer *pRenderer,
-                        SDL_Texture *pNumbersTextures[],
-                        SDL_Rect numbersRects[],
-                        SDL_Rect *blockRect,
-                        int puzzleSize,
-                        int map[],
-                        int block_width,
-                        int block_height);
+    void move_line(const int iClick, const int jClick);
 
-void destroy_textures_board(SDL_Texture *pNumberTextures[], int puzzleSize);
+private:
+    int from_coordinates_to_index(const int i, const int j);
+
+    void from_index_to_coordinates(const int index, int *pI, int *pJ);
+
+    std::vector<int> init_map();
+
+    bool is_resolved();
+
+    bool move_block(Block_Direction dir);
+
+    void move_block_set_differences(Block_Direction dir, int *iBlock, int *jBlock, int *xDifBlock, int *yDifBlock, int *iDifVoid, int *jDifVoid);
+
+    void move_block_apply_differences(const int iBlock, const int jBlock, const int xDifBlock, const int yDifBlock, const int iDifVoid, const int jDifVoid);
+
+    bool move_line_is_valid_move(const int iClick, const int jClick);
+
+    Block_Direction move_line_determine_direction(const int iClick, const int jClick);
+
+    Block_Direction random_direction();
+
+    Block_Direction opposite_direction(const Block_Direction dir);
+
+    int render_numbers_textures(Application &application, int *pIndexBlockToPlace);
+
+    int render_number_texture(Application &application, int *pIndexBlockToPlace, const int numBlock, const int indexBlock);
+
+    int render_highlight_rectangle(Application &application, const int iBlockToPlace, const int jBlockToPlace);
+};
 #endif // BOARD_H_INCLUDED

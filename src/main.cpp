@@ -1,7 +1,7 @@
 #include "main.hpp"
 #include "check.hpp"
 #include "title.hpp"
-// #include "game.hpp"
+#include "game.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -21,11 +21,7 @@ int main(int argc, char *argv[])
             break;
 
         case STATE_GAME:
-            SDL_Log("Oops! -Game- tot implemented yet!");
-            close_program(application);
-            return EXIT_SUCCESS;
-            /*resize_window_board(pWindow, puzzleSize, block_width, block_height, window_width, window_height);
-            state = game(pRenderer, pFont, puzzleSize, block_width, block_height, window_width, window_height);*/
+            Game::main(&application);
             break;
 
         case STATE_DEMO:

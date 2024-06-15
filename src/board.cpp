@@ -1,179 +1,204 @@
 #include "board.hpp"
 
-bool resolved(int map[], int puzzleSize)
+Board::Board(int sizeOfPuzzle)
 {
-  for (int index = 0; index < puzzleSize; index++)
-    if (index != map[index])
+  this->blockWidth = (DEFAULT_WINDOW_WIDTH - sizeOfPuzzle * SEP_SIZE) / sizeOfPuzzle;
+  this->blockHeight = (DEFAULT_WINDOW_HEIGHT - sizeOfPuzzle * SEP_SIZE) / sizeOfPuzzle;
+  this->NUMBER_OF_BLOCKS = sizeOfPuzzle * sizeOfPuzzle;
+  this->map = init_map();
+  this->puzzleSize = sizeOfPuzzle;
+  this->iVoid = sizeOfPuzzle - 1;
+  this->jVoid = sizeOfPuzzle - 1;
+
+  this->blockRect = SDL_Rect{0, 0, this->blockWidth, this->blockHeight};
+
+  this->pNumbersTextures = std::vector<SDL_Texture *>(this->NUMBER_OF_BLOCKS - 1, nullptr);
+  this->numbersRects = std::vector<SDL_Rect>(this->NUMBER_OF_BLOCKS - 1);
+}
+
+int Board::from_coordinates_to_index(const int i, const int j)
+{
+  return i * this->puzzleSize + j;
+}
+
+void Board::from_index_to_coordinates(const int index, int *pI, int *pJ)
+{
+  *pI = index / this->puzzleSize;
+  *pJ = index % this->puzzleSize;
+}
+
+std::vector<int> Board::init_map()
+{
+  std::vector<int> map(this->NUMBER_OF_BLOCKS);
+
+  for (int index = 0; index < this->NUMBER_OF_BLOCKS; index++)
+    map[index] = index;
+
+  return map;
+}
+
+void Board::shuffle()
+{
+  const int NUMBER_OF_MOVES = this->NUMBER_OF_BLOCKS * this->NUMBER_OF_BLOCKS;
+  const int MAX_NUMBER_OF_STEPS = this->NUMBER_OF_BLOCKS * NUMBER_OF_MOVES;
+  int numberOfSteps = 0;
+
+  Block_Direction direction;
+  Block_Direction prevDirection = Block_Direction::BLOCK_DOWN;
+
+  while (this->is_resolved())
+  {
+    for (int i = 0; i < NUMBER_OF_MOVES; i++)
+    {
+      numberOfSteps++;
+      direction = this->random_direction();
+
+      if (direction != this->opposite_direction(direction))
+      {
+        prevDirection = direction;
+        if (!this->move_block(direction))
+          i--;
+      }
+      else
+        i--;
+    }
+
+    if (numberOfSteps == MAX_NUMBER_OF_STEPS)
+    {
+      std::cout << "-shuffle- Maximum number of steps reached !" << std::endl;
+      return;
+    }
+  }
+}
+
+bool Board::is_resolved()
+{
+  for (int number = 0; number < this->puzzleSize; number++)
+    if (number != this->map[number])
       return false;
 
   return true;
 }
 
-void resize_window_board(SDL_Window *pWindow, int puzzleSize, int &block_width, int &block_height, int &window_width, int &window_height)
+bool Board::move_block(Block_Direction dir)
 {
-  block_width = (DEFAULT_WINDOW_WIDTH - puzzleSize * SEP_SIZE) / puzzleSize;
-  block_height = (DEFAULT_WINDOW_HEIGHT - puzzleSize * SEP_SIZE) / puzzleSize;
-
-  window_width = puzzleSize * (block_width + SEP_SIZE);
-  window_height = puzzleSize * (block_height + SEP_SIZE);
-
-  SDL_SetWindowSize(pWindow, window_width, window_height);
-}
-
-void move_block(int map[], int puzzleSize, int &iVoid, int &jVoid, int dir, SDL_Rect numbersRect[], int block_width, int block_height)
-{
-  int indexBlock, intermediate, numBlock;
-  int indexVoid = iVoid * puzzleSize + jVoid;
   int iBlock = iVoid;
   int jBlock = jVoid;
   int xDifBlock = 0;
   int yDifBlock = 0;
   int iDifVoid = 0;
   int jDifVoid = 0;
-  const int NUMBER_OF_BLOCS = puzzleSize * puzzleSize;
 
+  this->move_block_set_differences(dir, &iBlock, &jBlock, &xDifBlock, &yDifBlock, &iDifVoid, &jDifVoid);
+
+  if (iBlock == -1 || iBlock == this->puzzleSize || jBlock == -1 || jBlock == this->puzzleSize)
+    return false;
+
+  this->move_block_apply_differences(iBlock, jBlock, xDifBlock, yDifBlock, iDifVoid, jDifVoid);
+
+  return true;
+}
+
+void Board::move_block_set_differences(Block_Direction dir, int *iBlock, int *jBlock, int *xDifBlock, int *yDifBlock, int *iDifVoid, int *jDifVoid)
+{
   switch (dir)
   {
   case BLOCK_UP:
-    iBlock++;
-    yDifBlock = -(block_height + SEP_SIZE);
-    iDifVoid = 1;
+    (*iBlock)++;
+    *yDifBlock = -(this->blockHeight + SEP_SIZE);
+    *iDifVoid = 1;
     break;
 
   case BLOCK_LEFT:
-    jBlock++;
-    xDifBlock = -(block_width + SEP_SIZE);
-    jDifVoid = 1;
+    (*jBlock)++;
+    *xDifBlock = -(this->blockWidth + SEP_SIZE);
+    *jDifVoid = 1;
     break;
 
   case BLOCK_DOWN:
-    iBlock--;
-    yDifBlock = block_height + SEP_SIZE;
-    iDifVoid = -1;
+    (*iBlock)--;
+    *yDifBlock = this->blockHeight + SEP_SIZE;
+    *iDifVoid = -1;
     break;
 
   case BLOCK_RIGHT:
-    jBlock--;
-    xDifBlock = block_width + SEP_SIZE;
-    jDifVoid = -1;
+    (*jBlock)--;
+    *xDifBlock = blockWidth + SEP_SIZE;
+    *jDifVoid = -1;
     break;
 
   default:
-    SDL_Log("----->%d\n", dir);
-    return;
+    SDL_Log("-Board::move_block_set_differences- Unvalid direction ----->%d\n", dir);
+    std::cout << "-Board::move_block_set_differences- Unvalid direction ----->" << dir << std::endl;
     break;
   }
-
-  if (0 <= iBlock && iBlock < puzzleSize && 0 <= jBlock && jBlock < puzzleSize)
-  {
-    indexBlock = iBlock * puzzleSize + jBlock;
-    numBlock = map[indexBlock];
-
-    numbersRect[numBlock].x += xDifBlock;
-    numbersRect[numBlock].y += yDifBlock;
-
-    iVoid += iDifVoid;
-    jVoid += jDifVoid;
-
-    intermediate = map[indexBlock];
-    map[indexBlock] = map[indexVoid];
-    map[indexVoid] = intermediate;
-  }
 }
 
-void move_line(int map[], int puzzleSize, int iClick, int jClick, int &iVoid, int &jVoid, SDL_Rect numbersRect[], int block_width, int block_height)
+void Board::move_block_apply_differences(const int iBlock, const int jBlock, const int xDifBlock, const int yDifBlock, const int iDifVoid, const int jDifVoid)
 {
-  int dir = -1;
-  bool validMove = false;
+  int indexBlock = this->from_coordinates_to_index(iBlock, jBlock);
+  int indexVoid = this->from_coordinates_to_index(this->iVoid, this->jVoid);
+  int numBlock = this->map[indexBlock];
 
-  if (iVoid == iClick)
+  this->numbersRects[numBlock].x += xDifBlock;
+  this->numbersRects[numBlock].y += yDifBlock;
+
+  this->iVoid += iDifVoid;
+  this->jVoid += jDifVoid;
+
+  this->map[indexBlock] = this->map[indexVoid];
+  this->map[indexVoid] = numBlock;
+}
+
+void Board::move_line(int iClick, int jClick)
+{
+  if (!this->move_line_is_valid_move(iClick, jClick))
+    return;
+
+  Block_Direction dir = this->move_line_determine_direction(iClick, jClick);
+
+  while (iClick != this->iVoid || jClick != this->jVoid)
+    move_block(dir);
+}
+
+bool Board::move_line_is_valid_move(const int iClick, const int jClick)
+{
+  return (this->iVoid == iClick && this->jVoid != jClick) || (this->iVoid != iClick && this->jVoid == jClick);
+}
+
+Block_Direction Board::move_line_determine_direction(const int iClick, const int jClick)
+{
+  if (this->iVoid == iClick)
   {
-    if (jVoid < jClick)
-      dir = BLOCK_LEFT;
+    if (this->jVoid < jClick)
+      return Block_Direction::BLOCK_LEFT;
     else
-      dir = BLOCK_RIGHT;
-
-    validMove = true;
+      return Block_Direction::BLOCK_RIGHT;
   }
-  if (jVoid == jClick)
+
+  else // this->jVoid == jClick
   {
-    if (iVoid < iClick)
-      dir = BLOCK_UP;
+    if (this->iVoid < iClick)
+      return Block_Direction::BLOCK_UP;
     else
-      dir = BLOCK_DOWN;
-
-    validMove = true;
-  }
-
-  while (validMove && (iVoid != iClick || jVoid != jClick))
-    move_block(map, puzzleSize, iVoid, jVoid, dir, numbersRect, block_width, block_height);
-}
-
-void shuffle_board(int map[], int puzzleSize, SDL_Rect numbersRect[], int block_width, int block_height)
-{
-  const int NUMBER_OF_BLOCS = puzzleSize * puzzleSize;
-  int numberOfMoves = NUMBER_OF_BLOCS * NUMBER_OF_BLOCS;
-  int iVoid = puzzleSize - 1;
-  int jVoid = puzzleSize - 1;
-  int index, direction;
-
-  int prevDirection = BLOCK_DOWN;
-
-  for (index = 0; index < NUMBER_OF_BLOCS; index++)
-    map[index] = index;
-
-  while (resolved(map, puzzleSize))
-  {
-    for (int i = 0; i < numberOfMoves; i++)
-    {
-      direction = rand() % 4;
-
-      if ((direction + 2) % 4 != prevDirection)
-      {
-        prevDirection = direction;
-        move_block(map, puzzleSize, iVoid, jVoid, direction, numbersRect, block_width, block_height);
-      }
-      else
-        i--;
-    }
+      return Block_Direction::BLOCK_DOWN;
   }
 }
 
-void find_void(int map[], int puzzleSize, int &iVoid, int &jVoid)
+int Board::create_textures(Application &application)
 {
-  for (int i = 0; i < puzzleSize; i++)
-    for (int j = 0; j < puzzleSize; j++)
-      if (map[i * puzzleSize + j] == puzzleSize * puzzleSize - 1)
-      {
-        iVoid = i;
-        jVoid = j;
-      }
-}
+  SDL_Colour foregroundColour = SDL_Colour{255, 255, 255, 255};
+  SDL_Colour backgroundColour = SDL_Colour{0, 0, 0, 255};
 
-int create_textures_board(SDL_Renderer *&pRenderer,
-                          TTF_Font *pFont,
-                          SDL_Texture *pNumbersTextures[],
-                          int puzzleSize)
-{
-  SDL_Colour fgColour = SDL_Colour{255, 255, 255, 255};
-  SDL_Colour bgColour = SDL_Colour{0, 0, 0, 255};
+  char numbersChar[BOARD_MAX_NUMBER_OF_DIGITS + 1];
 
-  const int NUMBER_OF_BLOCS = puzzleSize * puzzleSize;
-  int j;
-
-  char numbersChar[10];
-
-  for (int number = 0; number < NUMBER_OF_BLOCS; number++)
+  for (int index = 0; index < this->NUMBER_OF_BLOCKS - 1; index++)
   {
-    std::sprintf(numbersChar, "%d", number + 1);
+    std::sprintf(numbersChar, "%d", index + 1);
 
-    if (create_text_texture(pNumbersTextures[number], pFont, numbersChar, fgColour, bgColour, pRenderer) < 0)
+    if (CHECK::create_text_texture(this->pNumbersTextures[index], numbersChar, foregroundColour, backgroundColour, application) < 0)
     {
-
-      for (j = 0; j < number; j++)
-        SDL_DestroyTexture(pNumbersTextures[j]);
-
-      error_message();
+      this->destroy_textures(index);
       return -1;
     }
   }
@@ -181,102 +206,169 @@ int create_textures_board(SDL_Renderer *&pRenderer,
   return 0;
 }
 
-int create_rectangles_board(SDL_Texture *pNumbersTextures[], SDL_Rect numbersRects[], int puzzleSize, int block_width, int block_height)
+int Board::create_rectangles()
 {
-  int i, j, index;
-  const int NUMBER_OF_BLOCS = puzzleSize * puzzleSize;
+  for (int index = 0; index < this->NUMBER_OF_BLOCKS - 1; index++)
+  {
+    if (CHECK::create_rect(this->pNumbersTextures[index], &this->numbersRects[index]) < 0)
+    {
+      destroy_textures(NUMBER_OF_BLOCKS);
+      return -1;
+    }
+  }
 
-  char numbersChar[10];
+  return 0;
+}
+
+void Board::set_positions()
+{
+  int index;
 
   for (int i = 0; i < puzzleSize; i++)
   {
     for (int j = 0; j < puzzleSize; j++)
     {
-      index = i * puzzleSize + j;
-
-      if (SDL_QueryTexture(pNumbersTextures[index], nullptr, nullptr, &numbersRects[index].w, &numbersRects[index].h) < 0)
-        RETURN_ERR
-
-      numbersRects[index].x = j * (block_width + SEP_SIZE) + (block_width - numbersRects[index].w) / 2;
-      numbersRects[index].y = i * (block_height + SEP_SIZE) + (block_height - numbersRects[index].h) / 2;
+      index = this->from_coordinates_to_index(i, j);
+      this->numbersRects[index].x = j * (this->blockWidth + SEP_SIZE) + (this->blockWidth - this->numbersRects[index].w) / 2;
+      this->numbersRects[index].y = i * (this->blockHeight + SEP_SIZE) + (this->blockHeight - this->numbersRects[index].h) / 2;
     }
   }
+}
+
+int Board::render_textures(Application &application)
+{
+  int indexBlockToPlace = this->NUMBER_OF_BLOCKS;
+  int indexVoid = from_coordinates_to_index(this->iVoid, this->jVoid);
+  int iBlockToPlace, jBlockToPlace;
+
+  if (render_numbers_textures(application, &indexBlockToPlace) < 0)
+    return -1;
+
+  this->from_index_to_coordinates(indexBlockToPlace, &iBlockToPlace, &jBlockToPlace);
+
+  if (indexBlockToPlace != indexVoid)
+    return render_highlight_rectangle(application, iBlockToPlace, jBlockToPlace);
+
   return 0;
 }
 
-int update_screen_board(SDL_Renderer *pRenderer,
-                        SDL_Texture *pNumbersTextures[],
-                        SDL_Rect numbersRects[],
-                        SDL_Rect *blockRect,
-                        int puzzleSize,
-                        int map[],
-                        int block_width,
-                        int block_height)
+int Board::render_numbers_textures(Application &application, int *pIndexBlockToPlace)
 {
-  int i, j, numBlock, blockIndex;
-  bool knownNextBlockToPlace = false;
+  int numBlock, indexBlock;
 
-  const int NUMBER_OF_BLOCS = puzzleSize * puzzleSize;
-
-  int numBlockToPlace = NUMBER_OF_BLOCS - 1;
-  int iBlockToPlace = puzzleSize - 1;
-  int jBlockToPlace = puzzleSize - 1;
-
-  if (SDL_SetRenderDrawColor(pRenderer, 255, 255, 255, 255) < 0 || SDL_RenderClear(pRenderer) < 0)
-    RETURN_ERR
-
-  for (i = 0; i < puzzleSize; i++)
+  for (int i = 0; i < this->puzzleSize; i++)
   {
+    this->blockRect.y = i * (this->blockHeight + SEP_SIZE);
 
-    blockRect->y = i * (block_height + SEP_SIZE);
-
-    for (j = 0; j < puzzleSize; j++)
+    for (int j = 0; j < this->puzzleSize; j++)
     {
-      blockRect->x = j * (block_width + SEP_SIZE);
+      this->blockRect.x = j * (this->blockWidth + SEP_SIZE);
 
-      blockIndex = i * puzzleSize + j;
-      numBlock = map[blockIndex];
+      indexBlock = this->from_coordinates_to_index(i, j);
+      numBlock = map[indexBlock];
 
-      if (numBlock < NUMBER_OF_BLOCS - 1)
-      {
-        if (SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255) < 0 || SDL_RenderFillRect(pRenderer, blockRect) < 0)
-          RETURN_ERR
-
-        if (SDL_RenderCopy(pRenderer, pNumbersTextures[numBlock], nullptr, &numbersRects[numBlock]) < 0)
-          RETURN_ERR
-
-        if (numBlock == blockIndex)
-        {
-          if (SDL_SetRenderDrawColor(pRenderer, 0, 0, 255, 127) < 0 || SDL_RenderFillRect(pRenderer, blockRect) < 0)
-            RETURN_ERR
-        }
-        else
-        {
-          if (numBlock < numBlockToPlace)
-          {
-            numBlockToPlace = numBlock;
-            iBlockToPlace = i;
-            jBlockToPlace = j;
-          }
-        }
-      }
+      if (this->render_number_texture(application, pIndexBlockToPlace, numBlock, indexBlock) < 0)
+        return -1;
     }
   }
 
-  blockRect->x = jBlockToPlace * (block_width + SEP_SIZE);
-  blockRect->y = iBlockToPlace * (block_height + SEP_SIZE);
-
-  if (SDL_SetRenderDrawColor(pRenderer, 0, 255, 0, 127) < 0 || SDL_RenderFillRect(pRenderer, blockRect) < 0)
-    RETURN_ERR
-
-  SDL_RenderPresent(pRenderer);
   return 0;
 }
 
-void destroy_textures_board(SDL_Texture *pNumberTextures[], int puzzleSize)
+int Board::render_number_texture(Application &application, int *pIndexBlockToPlace, const int numBlock, const int indexBlock)
 {
-  const int NUMBER_OF_BLOCS = puzzleSize * puzzleSize;
+  int numBlockToPlace = this->map[*pIndexBlockToPlace];
 
-  for (int number = 0; number < NUMBER_OF_BLOCS; number++)
-    SDL_DestroyTexture(pNumberTextures[number]);
+  if (numBlock == this->NUMBER_OF_BLOCKS - 1)
+    return 0;
+
+  if (CHECK::render_opaque_black_rectangle(&this->blockRect, application) < 0)
+    return -1;
+
+  if (CHECK::render_texture(pNumbersTextures[numBlock], &numbersRects[numBlock], application) < 0)
+    return -1;
+
+  if (numBlock == indexBlock)
+  {
+    if (CHECK::render_transparent_blue_rectangle(&this->blockRect, application) < 0)
+      return -1;
+  }
+
+  else if (numBlock < numBlockToPlace)
+    *pIndexBlockToPlace = indexBlock;
+
+  return 0;
+}
+
+int Board::render_highlight_rectangle(Application &application, const int iBlockToPlace, const int jBlockToPlace)
+{
+  this->blockRect.x = jBlockToPlace * (this->blockWidth + SEP_SIZE);
+  this->blockRect.y = iBlockToPlace * (this->blockHeight + SEP_SIZE);
+
+  if (CHECK::render_transparent_green_rectangle(&this->blockRect, application) < 0)
+    return -1;
+
+  return 0;
+}
+
+void Board::destroy_textures(int numberOfBlocksToDestroy)
+{
+  for (int number = 0; number < numberOfBlocksToDestroy; number++)
+    SDL_DestroyTexture(this->pNumbersTextures[number]);
+}
+
+Block_Direction Board::random_direction()
+{
+  int randInt = rand() % 4;
+
+  switch (randInt)
+  {
+  case 0:
+    return Block_Direction::BLOCK_UP;
+    break;
+
+  case 1:
+    return Block_Direction::BLOCK_LEFT;
+    break;
+
+  case 2:
+    return Block_Direction::BLOCK_DOWN;
+    break;
+
+  case 3:
+    return Block_Direction::BLOCK_RIGHT;
+    break;
+
+  default:
+    std::cout << "-random_direction- Unvalid random value: " << randInt << std::endl;
+    return Block_Direction::BLOCK_UP;
+    break;
+  }
+}
+
+Block_Direction Board::opposite_direction(const Block_Direction dir)
+{
+  switch (dir)
+  {
+  case Block_Direction::BLOCK_UP:
+    return Block_Direction::BLOCK_DOWN;
+    break;
+
+  case Block_Direction::BLOCK_LEFT:
+    return Block_Direction::BLOCK_RIGHT;
+    break;
+
+  case Block_Direction::BLOCK_DOWN:
+    return Block_Direction::BLOCK_UP;
+    break;
+
+  case Block_Direction::BLOCK_RIGHT:
+    return Block_Direction::BLOCK_LEFT;
+    break;
+
+  default:
+    SDL_Log("[opposite_direction]\nUnvalid direction ----->%d\n", dir);
+    return Block_Direction::BLOCK_DOWN;
+    break;
+  }
 }

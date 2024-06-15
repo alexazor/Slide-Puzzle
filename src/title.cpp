@@ -89,7 +89,7 @@ int Title_Screen::create_text_textures(SDL_Colour foregroundColour, SDL_Colour b
 int Title_Screen::create_puzzle_sizes_textures(SDL_Colour foregroundColour, SDL_Colour backgroundColour)
 {
     int puzzleSizeInt, i, j;
-    char puzzleSizeCharArray[MAX_NUMBER_OF_DIGITS + 1];
+    char puzzleSizeCharArray[TITLE_MAX_NUMBER_OF_DIGITS + 1];
 
     for (i = 0; i < PUZZLE_SIZES; i++)
     {

@@ -2,8 +2,8 @@
  * @file title.hpp
  * @author Alexandre AZOR
  * @brief Functions for the title page
- * @version 0.2
- * @date 2022-07-17
+ * @version 1.0
+ * @date 2024-06-06 / 2024-06-12
  *
  *
  */
@@ -19,7 +19,7 @@
 #define PUZZLE_SIZE_MAX 10
 #define PUZZLE_SIZES PUZZLE_SIZE_MAX - PUZZLE_SIZE_MIN + 1
 
-#define MAX_NUMBER_OF_DIGITS 2
+#define TITLE_MAX_NUMBER_OF_DIGITS 2
 
 #define NO_SELECTED_SIZE -1
 

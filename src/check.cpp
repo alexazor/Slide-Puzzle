@@ -77,6 +77,7 @@ void close_program(Application &application)
 
 namespace CHECK
 {
+    // CREATION
     int create_text_texture(SDL_Texture *&pTextTexture, char *text, SDL_Colour fgColour, SDL_Colour bgColour, Application &application)
     {
         SDL_Surface *pTextSurface = TTF_RenderText_Shaded(application.pFont, text, fgColour, bgColour);
@@ -127,6 +128,7 @@ namespace CHECK
         return 0;
     }
 
+    // COLOURING
     int colour_background(Uint8 red, Uint8 green, Uint8 blue, Application &application)
     {
         if (SDL_SetRenderDrawColor(application.pRenderer, red, green, blue, 255) < 0 || SDL_RenderClear(application.pRenderer) < 0)
@@ -148,6 +150,7 @@ namespace CHECK
         return colour_background(255, 255, 255, application);
     }
 
+    // RENDERING
     int render_texture(SDL_Texture *pTexture, SDL_Rect *pRect, Application &application)
     {
         if (SDL_RenderCopy(application.pRenderer, pTexture, nullptr, pRect) < 0)
@@ -174,4 +177,26 @@ namespace CHECK
     {
         return render_transparent_rectangle(pRect, 0, 255, 0, application);
     }
+
+    int render_transparent_blue_rectangle(SDL_Rect *pRect, Application &application)
+    {
+        return render_transparent_rectangle(pRect, 0, 0, 255, application);
+    }
+
+    int render_opaque_rectangle(SDL_Rect *pRect, Uint8 red, Uint8 green, Uint8 blue, Application &application)
+    {
+        if (SDL_SetRenderDrawColor(application.pRenderer, red, green, blue, 255) < 0 || SDL_RenderFillRect(application.pRenderer, pRect) < 0)
+        {
+            error_message();
+            return -1;
+        }
+
+        return 0;
+    }
+
+    int render_opaque_black_rectangle(SDL_Rect *pRect, Application &application)
+    {
+        return render_opaque_rectangle(pRect, 0, 0, 0, application);
+    }
+
 } // namespace CHECK

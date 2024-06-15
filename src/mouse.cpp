@@ -12,10 +12,10 @@ namespace MOUSE
         return is_in_segement(rect.x, rect.w, mouseX) && is_in_segement(rect.y, rect.h, mouseY);
     }
 
-    void get_block_coordinates(Sint32 mouseX, Sint32 mouseY, int block_height, int block_width, int &i, int &j)
+    void get_block_coordinates(Sint32 mouseX, Sint32 mouseY, int blockHeight, int blockWidth, int *pIclick, int *pJclick)
     {
-        j = mouseX / (block_width + SEP_SIZE);
-        i = mouseY / (block_height + SEP_SIZE);
+        *pJclick = mouseX / (blockWidth + SEP_SIZE);
+        *pIclick = mouseY / (blockHeight + SEP_SIZE);
     }
 
 } // namespace MOUSE

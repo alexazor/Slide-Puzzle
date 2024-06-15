@@ -19,10 +19,10 @@ public:
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
     TTF_Font *pFont;
-    unsigned int puzzleSize;
+    int puzzleSize;
 
-    unsigned int windowWidth = DEFAULT_WINDOW_WIDTH;
-    unsigned int windowHeight = DEFAULT_WINDOW_HEIGHT;
+    int windowWidth = DEFAULT_WINDOW_WIDTH;
+    int windowHeight = DEFAULT_WINDOW_HEIGHT;
 
     Program_State state = Program_State::STATE_TITLE;
 
